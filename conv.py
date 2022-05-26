@@ -129,8 +129,8 @@ class Conv2d():
             ###################
             # うまくいくパターン #
             ###################
-            w0_value = np.array([[[[w0_value[i][j][k][0] if i == l else 0 for l in range(w0_value.shape[0])]
-                                    for k in range(w0_value.shape[2])] for j in range(w0_value.shape[1])] for i in range(w0_value.shape[0])])
+            w0_value = np.array([[[[w0_value[i][j][k][0] if i == l else 0 for l in range(in_channels)]
+                                    for k in range(kernel_size)] for j in range(kernel_size)] for i in range(out_channels)])
 
             w0 = ng.variable(dtype=weight_dtype,
                              shape=(out_channels, kernel_size, kernel_size, in_channels),

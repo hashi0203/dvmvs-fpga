@@ -176,5 +176,5 @@ class FeatureExtractor():
         self.acts.append(a9)
 
     def get_output(self):
-        return self.acts, self.acts[3], self.acts[4], self.acts[5], self.acts[7], self.acts[9]
-        # return self.layer2_0.acts[1], self.acts[3], self.acts[4], self.acts[5], self.acts[7], self.acts[9]
+        # return self.acts, self.acts[3], self.acts[4], self.acts[5], self.acts[7], self.acts[9]
+        return self.acts, self.layer2_0.acts, self.acts[3], self.acts[4], self.acts[5], self.acts[7], self.acts[9]

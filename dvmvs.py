@@ -27,11 +27,11 @@ input_layer = ng.placeholder(dtype=act_dtype,
                              name='input_layer')
 
 feature_extractor = FeatureExtractor(input_layer)
-acts, layer1, layer2, layer3, layer4, layer5 = feature_extractor.get_output()
+acts, acts_20, layer1, layer2, layer3, layer4, layer5 = feature_extractor.get_output()
 
 # act_scale_factor = 128
 # act_scale_factor = 32767
-act_scale_factor = int(2 ** 15 - 1)
+act_scale_factor = int(2 ** 3 - 1)
 imagenet_mean = np.array([0, 0, 0]).astype(np.float32)
 imagenet_std = np.array([1, 1, 1]).astype(np.float32)
 # imagenet_mean = np.array([-0.093373775, -0.021101305, 0.118325084]).astype(np.float32)
@@ -70,7 +70,7 @@ input_layer_value = np.round(input_layer_value.astype(np.float64)).astype(np.int
 # ng.quantize([a1], input_scale_factors, input_means, input_stds)
 
 print("evaluating...")
-eval_outs = ng.eval(acts + [layer1], input_layer=input_layer_value)
+eval_outs = ng.eval(acts + acts_20 + [layer2], input_layer=input_layer_value)
 # output_layer_value = eval_outs[0].transpose(0, 3, 1, 2)
 # eval_outs = ng.eval([layer2], input_layer=input_layer_value)
 # output_layer_value = np.array(eval_outs[0]).transpose(0, 3, 1, 2)
@@ -116,6 +116,8 @@ output_layer_value = eval_outs[1].transpose(0, 3, 1, 2)
 print(np.corrcoef(output_layer_value.reshape(-1), mids["a1"].reshape(-1))[0, 1])
 output_layer_value = eval_outs[2].transpose(0, 3, 1, 2)
 print(np.corrcoef(output_layer_value.reshape(-1), mids["a2"].reshape(-1))[0, 1])
+output_layer_value = eval_outs[len(acts)+1].transpose(0, 3, 1, 2)
+print(np.corrcoef(output_layer_value.reshape(-1), mids["a34"].reshape(-1))[0, 1])
 
 
 # print(eval_outs[0])
