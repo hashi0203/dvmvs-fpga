@@ -36,7 +36,7 @@ class Conv2d():
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-        params = np.load(os.path.join(base_dir, "params/params_scale.npz"))
+        params = np.load(os.path.join(base_dir, "params_org/params_scale.npz"))
         assert param_name + ".weight" in params.files
         w0_value = params[param_name + ".weight"].transpose(0, 2, 3, 1)
         # print(np.sum((w0_value < -3.0) + (w0_value > 3.0)) / len(w0_value))

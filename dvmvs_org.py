@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import sys
 import os
+import time
 from xml.sax.handler import feature_external_ges
 
 import numpy as np
@@ -25,9 +26,12 @@ batchsize = 1
 input_layer = ng.placeholder(dtype=act_dtype,
                              shape=(batchsize, 64, 96, 3),  # N, H, W, C
                              name='input_layer')
-
+start_time = time.process_time()
 feature_extractor = FeatureExtractor(input_layer)
 acts, acts_20, layer1, layer2, layer3, layer4, layer5 = feature_extractor.get_output()
+end_time = time.process_time()
+elapsed_time = end_time - start_time
+print(elapsed_time)
 
 # act_scale_factor = 128
 # act_scale_factor = 32767
@@ -47,9 +51,9 @@ ng.quantize([layer5], input_scale_factors, input_means, input_stds)
 
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-inputs = np.load(os.path.join(base_dir, "params/inputs.npz"))
-outputs = np.load(os.path.join(base_dir, "params/outputs.npz"))
-mids = np.load(os.path.join(base_dir, "params/mids.npz"))
+inputs = np.load(os.path.join(base_dir, "params_org/inputs.npz"))
+outputs = np.load(os.path.join(base_dir, "params_org/outputs.npz"))
+mids = np.load(os.path.join(base_dir, "params_org/mids.npz"))
 
 input_layer_value = inputs["input"].transpose(0, 2, 3, 1)
 
