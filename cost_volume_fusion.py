@@ -29,13 +29,13 @@ def grid_sample(image, warping):
 def calculate_cost_volume_by_warping(image1, image2, warping, out_shape):
     cost_volume = np.zeros(out_shape)
 
-    for i in range(image2.shape[2]):
-        print(image2[0][0][i][0])
-    print("aaaa")
+    # for i in range(image2.shape[2]):
+    #     print(image2[0][0][i][0])
+    # print("aaaa")
 
-    for i in range(warping.shape[3]):
-        for j in range(warping.shape[4]):
-            print(warping[0][0][0][i][j])
+    # for i in range(warping.shape[3]):
+    #     for j in range(warping.shape[4]):
+    #         print(warping[0][0][0][i][j])
 
 
     for depth_i in range(n_depth_levels):

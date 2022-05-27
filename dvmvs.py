@@ -10,6 +10,7 @@ import nngen as ng
 from feature_extractor import feature_extractor
 from feature_shrinker import feature_shrinker
 from cost_volume_fusion import cost_volume_fusion
+from cost_volume_encoder import cost_volume_encoder
 
 act_dtype = ng.int32
 weight_dtype = ng.int8
@@ -23,7 +24,7 @@ inputs = np.load(os.path.join(base_dir, "params/inputs.npz"))
 outputs = np.load(os.path.join(base_dir, "params/outputs.npz"))
 # mids = np.load(os.path.join(base_dir, "params/mids.npz"))
 
-print(inputs["measurement_features"][0][0][0])
+# print(inputs["measurement_features"][0][0][0])
 
 input_scale_factor = 1 << 12
 input_layer_value = inputs["input"].transpose(0, 2, 3, 1)
@@ -64,19 +65,24 @@ reference_features = feature_shrinker(*layers, params)
 print("preparing cost volume fusion...")
 cost_volume = cost_volume_fusion(reference_features[0], measurement_features, inputs["warpings"], n_measurement_frames=1)
 
+print("preparing cost volume encoder...")
+skips = cost_volume_encoder(*reference_features, cost_volume, params)
+
 print("evaluating...")
-eval_outs = ng.eval(layers + reference_features[::-1] + (cost_volume,), **ng_inputs)
+eval_outs = ng.eval(layers + reference_features[::-1] + (cost_volume,) + skips, **ng_inputs)
 
 
 files = ["layer1", "layer2", "layer3", "layer4", "layer5",
          "feature_one_sixteen", "feature_one_eight", "feature_quarter", "feature_half",
-         "cost_volume"]
+         "cost_volume",
+         "skip0", "skip1", "skip2", "skip3", "bottom"]
 shifts = [11, 11, 11, 12, 13,
           11, 11, 10, 9,
-          7]
+          7,
+          13, 13, 13, 12, 13]
 for i in range(len(eval_outs)):
     print(files[i], outputs[files[i]].shape)
     output_layer_value = eval_outs[i].transpose(0, 3, 1, 2) / (1 << shifts[i])
-    print(np.mean(output_layer_value.reshape(-1)), np.mean(outputs[files[i]].reshape(-1)))
+    print(np.mean(np.abs(output_layer_value.reshape(-1))), np.mean(np.abs(outputs[files[i]].reshape(-1))))
     print(np.corrcoef(output_layer_value.reshape(-1), outputs[files[i]].reshape(-1))[0, 1])
     print("--------------------------")
