@@ -2,7 +2,7 @@ import numpy as np
 import nngen as ng
 
 def feature_extractor(act0, params,
-                    weight_dtype=ng.int8, bias_dtype=ng.int32, scale_dtype=ng.int8, act_dtype=ng.int32):
+                      weight_dtype=ng.int8, bias_dtype=ng.int32, scale_dtype=ng.int8, act_dtype=ng.int32):
 
 
     # [1] conv
