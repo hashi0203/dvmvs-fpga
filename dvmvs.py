@@ -8,6 +8,7 @@ from xml.sax.handler import feature_external_ges
 import numpy as np
 import nngen as ng
 from feature_extractor import feature_extractor
+from feature_shrinker import feature_shrinker
 
 act_dtype = ng.int32
 weight_dtype = ng.int8
@@ -34,11 +35,17 @@ input_layer_value = np.clip(input_layer_value,
 input_layer_value = np.round(input_layer_value.astype(np.float64)).astype(np.int32)
 
 print("preparing feature extractor...")
-layer1, layer2, layer3, layer4, layer5 = feature_extractor(input_layer, params)
+layers = feature_extractor(input_layer, params)
+
+print("preparing feature shrinker...")
+reference_features = feature_shrinker(*layers, params)
 
 print("evaluating...")
-eval_outs = ng.eval([layer1, layer2, layer3, layer4, layer5], input_layer=input_layer_value)
+eval_outs = ng.eval(layers + reference_features, input_layer=input_layer_value)
 
+
+files = ["layer1", "layer2", "layer3", "layer4", "layer5",
+         "feature_half", "feature_quarter", "feature_one_eight", "feature_one_sixteen"]
 for i in range(len(eval_outs)):
     output_layer_value = eval_outs[i].transpose(0, 3, 1, 2)
-    print(np.corrcoef(output_layer_value.reshape(-1), outputs["layer%d" % (i+1)].reshape(-1))[0, 1])
+    print(np.corrcoef(output_layer_value.reshape(-1), outputs[files[i]].reshape(-1))[0, 1])
