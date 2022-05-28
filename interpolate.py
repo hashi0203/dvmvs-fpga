@@ -32,18 +32,16 @@ class interpolate():
                     for k in range(out_width):
                         y = j * fy
                         x = k * fx
-                        y_int = int(y)
-                        x_int = int(x)
+                        y_int = int(y) if y < in_height-1 else int(y) - 1
+                        x_int = int(x) if x < in_width-1 else int(x) - 1
                         ys = [y_int, y_int + 1]
                         xs = [x_int, x_int + 1]
                         dys = [y - ys[0], ys[1] - y]
                         dxs = [x - xs[0], xs[1] - x]
                         for i in range(channels):
-                            # output_idx = (i * out_height + j) * out_width + k
                             sum = 0
                             for yi in range(2):
                                 for xi in range(2):
-                                    # input_idx = (i * in_height + ys[yi]) * in_width + xs[xi]
                                     sum += dys[1-yi] * dxs[1-xi] * input[0][ys[yi]][xs[xi]][i]
                             output[0][j][k][i] = int(round(sum)) >> rshift
             else:
