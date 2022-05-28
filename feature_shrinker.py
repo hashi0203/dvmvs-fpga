@@ -2,7 +2,7 @@ import nngen as ng
 from interpolate import interpolate
 
 def feature_shrinker(act3, act14, act25, act43, act61, params,
-                     weight_dtype=ng.int8, bias_dtype=ng.int32, scale_dtype=ng.int8, act_dtype=ng.int32):
+                     weight_dtype=ng.int8, bias_dtype=ng.int32, act_dtype=ng.int32):
 
     # [62] conv
     weight62 = ng.variable(dtype=weight_dtype, shape=(32, 1, 1, 320), name="fpn.inner_blocks.4.weight")

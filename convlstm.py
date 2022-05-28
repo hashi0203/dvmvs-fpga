@@ -39,8 +39,7 @@ class ln():
         return np.round((x - e) / np.sqrt(v + eps) * (1 << self.lshift)).astype(x.dtype)
 
 
-def LSTMFusion(act100, act101, act102, params,
-               weight_dtype=ng.int8, bias_dtype=ng.int32, scale_dtype=ng.int8, act_dtype=ng.int32):
+def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=ng.int32):
 
     # [103] cat
     act103 = ng.concat([act100, act101], axis=3)
@@ -75,7 +74,7 @@ def LSTMFusion(act100, act101, act102, params,
     # in2_rshift106 = ng.constant([1], dtype=ng.int8)
     # out_rshift106 = ng.constant([12], dtype=ng.int8)
     out_rshift106 = ng.constant([14], dtype=ng.int8)
-    sum106 = ng.clip(ng.rshift_round(ng.add(ng.multiply(ff105, act102, dtype=ng.int64), ng.multiply(ii105, gg105, dtype=ng.int64)), out_rshift106), dtype=ng.int32)
+    sum106 = ng.clip(ng.rshift_round(ng.add(ng.multiply(ff105, act102, dtype=ng.int64), ng.multiply(ii105, gg105, dtype=ng.int64)), out_rshift106), dtype=act_dtype)
     # sum106 = ng.rshift_round(ng.add(ng.multiply(ng.rshift_round(ff105, in_rshift106), act102), ng.multiply(ng.rshift_round(ii105, in_rshift106), gg105)), out_rshift106)
     act106 = ng.extern([sum106], opcode=0x106, func=ln(12))
 
@@ -85,7 +84,7 @@ def LSTMFusion(act100, act101, act102, params,
     # in_rshift107 = ng.constant([1], dtype=ng.int8)
     # rshift107 = ng.constant([15], dtype=ng.int8)
     rshift107 = ng.constant([12], dtype=ng.int8)
-    act107 = ng.clip(ng.rshift_round(ng.multiply(celu107, oo105, dtype=ng.int64), rshift107), dtype=ng.int32)
+    act107 = ng.clip(ng.rshift_round(ng.multiply(celu107, oo105, dtype=ng.int64), rshift107), dtype=act_dtype)
 
 
     return act107, act106
