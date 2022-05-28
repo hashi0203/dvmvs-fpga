@@ -25,7 +25,6 @@ inputs = np.load(os.path.join(base_dir, "params/inputs.npz"))
 outputs = np.load(os.path.join(base_dir, "params/outputs.npz"))
 # mids = np.load(os.path.join(base_dir, "params/mids.npz"))
 
-# print(inputs["measurement_features"][0][0][0])
 
 def prepare_input_value(value, lshift):
     value *= 1 << lshift
@@ -57,14 +56,22 @@ ng_inputs["hidden_state"] = hidden_state_value
 ng_inputs["cell_state"] = cell_state_value
 
 
-print("preparing feature extractor...")
-layers = feature_extractor(input_layer, params)
+feature_list = ["half", "quarter", "one_eight", "one_sixteen"]
+feature_shifts = [9, 10, 11, 11]
+features_value = [prepare_input_value(outputs["feature_%s" % feature_list[i]].transpose(0, 2, 3, 1), feature_shifts[i]) for i in range(4)]
+reference_features = [ng.placeholder(dtype=act_dtype, shape=features_value[i].shape, name='feature_%s' % feature_list[i]) for i in range(4)]
+for i in range(4):
+    ng_inputs["feature_%s" % feature_list[i]] = features_value[i]
 
-print("preparing feature shrinker...")
-reference_features = feature_shrinker(*layers, params)
+
+# print("preparing feature extractor...")
+# layers = feature_extractor(input_layer, params)
+
+# print("preparing feature shrinker...")
+# reference_features = feature_shrinker(*layers, params)
 
 print("preparing cost volume fusion...")
-cost_volume = cost_volume_fusion(reference_features[0], measurement_features, inputs["warpings"], n_measurement_frames=1)
+cost_volume = cost_volume_fusion(reference_features[0], measurement_features, inputs["warpings"], n_measurement_frames)
 
 print("preparing cost volume encoder...")
 skips = cost_volume_encoder(*reference_features, cost_volume, params)
@@ -73,7 +80,8 @@ print("preparing LSTM fusion...")
 lstm_states = LSTMFusion(skips[-1], hidden_state, cell_state, params)
 
 print("evaluating...")
-eval_outs = ng.eval(layers + reference_features[::-1] + (cost_volume,) + skips + lstm_states[::-1], **ng_inputs)
+# eval_outs = ng.eval(layers + reference_features[::-1] + (cost_volume,) + skips + lstm_states[::-1], **ng_inputs)
+eval_outs = ng.eval((cost_volume,) + skips + lstm_states[::-1], **ng_inputs)
 
 
 files = ["layer1", "layer2", "layer3", "layer4", "layer5",
@@ -86,9 +94,12 @@ shifts = [11, 11, 11, 12, 13,
           7,
           13, 13, 13, 12, 13,
           12, 14]
+files = files[9:]
+shifts = shifts[9:]
 for i in range(len(eval_outs)):
     print(files[i], outputs[files[i]].shape)
     output_layer_value = eval_outs[i].transpose(0, 3, 1, 2) / (1 << shifts[i])
-    print(np.mean(np.abs(output_layer_value.reshape(-1))), np.mean(np.abs(outputs[files[i]].reshape(-1))))
+    print(np.mean(output_layer_value.reshape(-1)), np.std(output_layer_value.reshape(-1)))
+    print(np.mean(outputs[files[i]].reshape(-1)), np.std(outputs[files[i]].reshape(-1)))
     print(np.corrcoef(output_layer_value.reshape(-1), outputs[files[i]].reshape(-1))[0, 1])
     print("--------------------------")
