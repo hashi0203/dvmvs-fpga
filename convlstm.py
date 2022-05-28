@@ -19,11 +19,11 @@ class celu():
                     for l in range(x.shape[3]):
                         tb_idx = (-x[i][j][k][l]) >> (xshift - tbshift)
                         if x[i][j][k][l] > 0:
-                            x[i][j][k][l] = x[i][j][k][l] << (celushift - xshift)
+                            x[i][j][k][l] = x[i][j][k][l]
                         elif tb_idx >= (1 << tbbit):
-                            x[i][j][k][l] = -1 << celushift
+                            x[i][j][k][l] = -1 << xshift
                         else:
-                            x[i][j][k][l] = celu_table[tb_idx]
+                            x[i][j][k][l] = np.round(celu_table[tb_idx] / (float) (1 << (celushift - xshift))).astype(x.dtype)
 
         return x
 
@@ -65,23 +65,28 @@ def LSTMFusion(act100, act101, act102, params,
     slice105s = [ng.slice_(act104, (0, 0, 0, i * 512), (1, 2, 3, (i+1) * 512), (1, 1, 1, 1)) for i in range(4)]
 
     rshift105 = ng.constant([4], dtype=ng.int8)
-    ii105, ff105, oo105 = [ng.sigmoid(ng.rshift_round(slice105s[i], rshift105), lut_addrwidth=9, lut_clip=8.0, range_rate=1.0) for i in range(3)]
+    ii105, ff105, oo105 = [ng.sigmoid(ng.rshift_round(slice105s[i], rshift105), lut_addrwidth=9, lut_clip=8.0, range_rate=0.5) for i in range(3)]
 
-    gg105 = ng.extern([slice105s[3]], opcode=0x105, func=lambda x : celu(13)(ln(13)(x)))
+    gg105 = ng.extern([slice105s[3]], opcode=0x105, func=lambda x : celu(12)(ln(12)(x)))
 
 
     # [106] cell_state
-    in_rshift106 = ng.constant([4], dtype=ng.int8)
-    out_rshift106 = ng.constant([12], dtype=ng.int8)
-    sum106 = ng.rshift_round(ng.add(ng.multiply(ng.rshift_round(ff105, in_rshift106), act102), ng.multiply(ng.rshift_round(ii105, in_rshift106), ng.rshift_round(gg105, in_rshift106))), out_rshift106)
+    # in_rshift106 = ng.constant([2], dtype=ng.int8)
+    # in2_rshift106 = ng.constant([1], dtype=ng.int8)
+    # out_rshift106 = ng.constant([12], dtype=ng.int8)
+    out_rshift106 = ng.constant([14], dtype=ng.int8)
+    sum106 = ng.clip(ng.rshift_round(ng.add(ng.multiply(ff105, act102, dtype=ng.int64), ng.multiply(ii105, gg105, dtype=ng.int64)), out_rshift106), dtype=ng.int32)
+    # sum106 = ng.rshift_round(ng.add(ng.multiply(ng.rshift_round(ff105, in_rshift106), act102), ng.multiply(ng.rshift_round(ii105, in_rshift106), gg105)), out_rshift106)
     act106 = ng.extern([sum106], opcode=0x106, func=ln(12))
 
 
     # [107] hidden_state
     celu107 = ng.extern([act106], opcode=0x107, func=celu(12))
-    in_rshift107 = ng.constant([1], dtype=ng.int8)
-    rshift107 = ng.constant([16], dtype=ng.int8)
-    act107 = ng.rshift_round(ng.multiply(ng.rshift_round(celu107, in_rshift107), ng.rshift_round(oo105, in_rshift107)), rshift107)
+    # in_rshift107 = ng.constant([1], dtype=ng.int8)
+    # rshift107 = ng.constant([15], dtype=ng.int8)
+    print(celu107.dtype, oo105.dtype)
+    rshift107 = ng.constant([28], dtype=ng.int8)
+    act107 = ng.clip(ng.rshift_round(ng.multiply(celu107, oo105, dtype=ng.int64), rshift107), dtype=ng.int32)
 
 
     return act107, act106
