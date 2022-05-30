@@ -1,6 +1,5 @@
 import numpy as np
 import nngen as ng
-from utils import rshift_round_and_clip
 
 def cost_volume_encoder(act78, act74, act70, act66, act80, params,
                         weight_dtype=ng.int8, bias_dtype=ng.int32, scale_dtype=ng.int8, act_dtype=ng.int16, mid_dtype=ng.int32):
