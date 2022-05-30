@@ -51,12 +51,10 @@ def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=n
     weight104.set_value(params["lstm_cell.conv.weight"])
 
     # bias104 = ng.variable(dtype=bias_dtype, shape=(2048,), name="lstm_cell.conv.bias")
-    # bias104.set_value(params["lstm_cell.conv.bias"])
+    # bias104.set_value(np.round(params["lstm_cell.conv.bias"] / (float) (1 << 12)).astype(params["lstm_cell.conv.bias"].dtype))
 
-    conv104 = ng.conv2d(act103, weight104, strides=(1, 1, 1, 1), dtype=mid_dtype)
+    conv104 = ng.conv2d(act103, weight104, strides=(1, 1, 1, 1), asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
-    # lshift104 = ng.constant([20], dtype=ng.int8)
-    # sum104 = ng.add(conv104, ng.lshift(bias104, lshift104))
     rshift104 = ng.constant([11], dtype=ng.int8)
     act104 = rshift_round_and_clip(conv104, rshift104, dtype=act_dtype)
 
