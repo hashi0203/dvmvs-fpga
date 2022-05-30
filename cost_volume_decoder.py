@@ -19,8 +19,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale109 = ng.variable(dtype=scale_dtype, shape=(256,), name="decoder_block1.up_convolution.conv.0.scale")
     scale109.set_value(params["decoder_block1.up_convolution.conv.0.scale"])
 
+    conv109 = ng.conv2d(act108, weight109, strides=(1, 1, 1, 1), bias=bias109, scale=scale109, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift109 = ng.constant([16], dtype=ng.int8)
-    act109 = ng.conv2d(act108, weight109, strides=(1, 1, 1, 1), bias=bias109, scale=scale109, rshift_out=rshift109, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act109 = ng.relu(rshift_round_and_clip(conv109, rshift109, dtype=act_dtype))
 
 
     # [110] cat
@@ -38,8 +40,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale111 = ng.variable(dtype=scale_dtype, shape=(256,), name="decoder_block1.convolution1.0.scale")
     scale111.set_value(params["decoder_block1.convolution1.0.scale"])
 
+    conv111 = ng.conv2d(act110, weight111, strides=(1, 1, 1, 1), bias=bias111, scale=scale111, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift111 = ng.constant([12], dtype=ng.int8)
-    act111 = ng.conv2d(act110, weight111, strides=(1, 1, 1, 1), bias=bias111, scale=scale111, rshift_out=rshift111, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act111 = ng.relu(rshift_round_and_clip(conv111, rshift111, dtype=act_dtype))
 
 
     # [112] conv
@@ -52,8 +56,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale112 = ng.variable(dtype=scale_dtype, shape=(256,), name="decoder_block1.convolution2.0.scale")
     scale112.set_value(params["decoder_block1.convolution2.0.scale"])
 
+    conv112 = ng.conv2d(act111, weight112, strides=(1, 1, 1, 1), bias=bias112, scale=scale112, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift112 = ng.constant([11], dtype=ng.int8)
-    act112 = ng.conv2d(act111, weight112, strides=(1, 1, 1, 1), bias=bias112, scale=scale112, rshift_out=rshift112, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act112 = ng.relu(rshift_round_and_clip(conv112, rshift112, dtype=act_dtype))
 
 
     # [113] conv
@@ -63,8 +69,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     bias113 = ng.variable(dtype=bias_dtype, shape=(1,), name="depth_layer_one_sixteen.0.bias")
     bias113.set_value(np.round(params["depth_layer_one_sixteen.0.bias"] / (float) (1 << 7)).astype(params["depth_layer_one_sixteen.0.bias"].dtype))
 
+    conv113 = ng.conv2d(act112, weight113, strides=(1, 1, 1, 1), bias=bias113, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift113 = ng.constant([18], dtype=ng.int8)
-    act113 = ng.conv2d(act112, weight113, strides=(1, 1, 1, 1), bias=bias113, rshift_out=rshift113, act_func=ng.sigmoid, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act113 = ng.sigmoid(ng.rshift_round(conv113, rshift113, dtype=act_dtype), lut_addrwidth=9, lut_clip=8.0, range_rate=0.5, dtype=act_dtype)
 
 
     # [114] interpolate
@@ -81,8 +89,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale115 = ng.variable(dtype=scale_dtype, shape=(128,), name="decoder_block2.up_convolution.conv.0.scale")
     scale115.set_value(params["decoder_block2.up_convolution.conv.0.scale"])
 
+    conv115 = ng.conv2d(act114, weight115, strides=(1, 1, 1, 1), bias=bias115, scale=scale115, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift115 = ng.constant([13], dtype=ng.int8)
-    act115 = ng.conv2d(act114, weight115, strides=(1, 1, 1, 1), bias=bias115, scale=scale115, rshift_out=rshift115, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act115 = ng.relu(rshift_round_and_clip(conv115, rshift115, dtype=act_dtype))
 
 
     # [116] interpolate
@@ -104,8 +114,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale118 = ng.variable(dtype=scale_dtype, shape=(128,), name="decoder_block2.convolution1.0.scale")
     scale118.set_value(params["decoder_block2.convolution1.0.scale"])
 
+    conv118 = ng.conv2d(act117, weight118, strides=(1, 1, 1, 1), bias=bias118, scale=scale118, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift118 = ng.constant([15], dtype=ng.int8)
-    act118 = ng.conv2d(act117, weight118, strides=(1, 1, 1, 1), bias=bias118, scale=scale118, rshift_out=rshift118, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act118 = ng.relu(rshift_round_and_clip(conv118, rshift118, dtype=act_dtype))
 
 
     # [119] conv
@@ -118,8 +130,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale119 = ng.variable(dtype=scale_dtype, shape=(128,), name="decoder_block2.convolution2.0.scale")
     scale119.set_value(params["decoder_block2.convolution2.0.scale"])
 
+    conv119 = ng.conv2d(act118, weight119, strides=(1, 1, 1, 1), bias=bias119, scale=scale119, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift119 = ng.constant([11], dtype=ng.int8)
-    act119 = ng.conv2d(act118, weight119, strides=(1, 1, 1, 1), bias=bias119, scale=scale119, rshift_out=rshift119, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act119 = ng.relu(rshift_round_and_clip(conv119, rshift119, dtype=act_dtype))
 
 
     # [120] conv
@@ -129,8 +143,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     bias120 = ng.variable(dtype=bias_dtype, shape=(1,), name="depth_layer_one_eight.0.bias")
     bias120.set_value(np.round(params["depth_layer_one_eight.0.bias"] / (float) (1 << 7)).astype(params["depth_layer_one_eight.0.bias"].dtype))
 
+    conv120 = ng.conv2d(act119, weight120, strides=(1, 1, 1, 1), bias=bias120, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift120 = ng.constant([17], dtype=ng.int8)
-    act120 = ng.conv2d(act119, weight120, strides=(1, 1, 1, 1), bias=bias120, rshift_out=rshift120, act_func=ng.sigmoid, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act120 = ng.sigmoid(ng.rshift_round(conv120, rshift120, dtype=act_dtype), lut_addrwidth=9, lut_clip=8.0, range_rate=0.5, dtype=act_dtype)
 
 
     # [121] interpolate
@@ -147,8 +163,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale122 = ng.variable(dtype=scale_dtype, shape=(64,), name="decoder_block3.up_convolution.conv.0.scale")
     scale122.set_value(params["decoder_block3.up_convolution.conv.0.scale"])
 
+    conv122 = ng.conv2d(act121, weight122, strides=(1, 1, 1, 1), bias=bias122, scale=scale122, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift122 = ng.constant([13], dtype=ng.int8)
-    act122 = ng.conv2d(act121, weight122, strides=(1, 1, 1, 1), bias=bias122, scale=scale122, rshift_out=rshift122, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act122 = ng.relu(rshift_round_and_clip(conv122, rshift122, dtype=act_dtype))
 
 
     # [123] interpolate
@@ -170,8 +188,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale125 = ng.variable(dtype=scale_dtype, shape=(64,), name="decoder_block3.convolution1.0.scale")
     scale125.set_value(params["decoder_block3.convolution1.0.scale"])
 
+    conv125 = ng.conv2d(act124, weight125, strides=(1, 1, 1, 1), bias=bias125, scale=scale125, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift125 = ng.constant([14], dtype=ng.int8)
-    act125 = ng.conv2d(act124, weight125, strides=(1, 1, 1, 1), bias=bias125, scale=scale125, rshift_out=rshift125, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act125 = ng.relu(rshift_round_and_clip(conv125, rshift125, dtype=act_dtype))
 
 
     # [126] conv
@@ -184,8 +204,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale126 = ng.variable(dtype=scale_dtype, shape=(64,), name="decoder_block3.convolution2.0.scale")
     scale126.set_value(params["decoder_block3.convolution2.0.scale"])
 
+    conv126 = ng.conv2d(act125, weight126, strides=(1, 1, 1, 1), bias=bias126, scale=scale126, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift126 = ng.constant([13], dtype=ng.int8)
-    act126 = ng.conv2d(act125, weight126, strides=(1, 1, 1, 1), bias=bias126, scale=scale126, rshift_out=rshift126, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act126 = ng.relu(rshift_round_and_clip(conv126, rshift126, dtype=act_dtype))
 
 
     # [127] conv
@@ -195,8 +217,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     bias127 = ng.variable(dtype=bias_dtype, shape=(1,), name="depth_layer_quarter.0.bias")
     bias127.set_value(np.round(params["depth_layer_quarter.0.bias"] / (float) (1 << 5)).astype(params["depth_layer_quarter.0.bias"].dtype))
 
+    conv127 = ng.conv2d(act126, weight127, strides=(1, 1, 1, 1), bias=bias127, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift127 = ng.constant([19], dtype=ng.int8)
-    act127 = ng.conv2d(act126, weight127, strides=(1, 1, 1, 1), bias=bias127, rshift_out=rshift127, act_func=ng.sigmoid, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act127 = ng.sigmoid(ng.rshift_round(conv127, rshift127, dtype=act_dtype), lut_addrwidth=9, lut_clip=8.0, range_rate=0.5, dtype=act_dtype)
 
 
     # [128] interpolate
@@ -213,8 +237,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale129 = ng.variable(dtype=scale_dtype, shape=(32,), name="decoder_block4.up_convolution.conv.0.scale")
     scale129.set_value(params["decoder_block4.up_convolution.conv.0.scale"])
 
+    conv129 = ng.conv2d(act128, weight129, strides=(1, 1, 1, 1), bias=bias129, scale=scale129, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift129 = ng.constant([15], dtype=ng.int8)
-    act129 = ng.conv2d(act128, weight129, strides=(1, 1, 1, 1), bias=bias129, scale=scale129, rshift_out=rshift129, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act129 = ng.relu(rshift_round_and_clip(conv129, rshift129, dtype=act_dtype))
 
 
     # [130] interpolate
@@ -236,8 +262,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale132 = ng.variable(dtype=scale_dtype, shape=(32,), name="decoder_block4.convolution1.0.scale")
     scale132.set_value(params["decoder_block4.convolution1.0.scale"])
 
+    conv132 = ng.conv2d(act131, weight132, strides=(1, 1, 1, 1), bias=bias132, scale=scale132, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift132 = ng.constant([14], dtype=ng.int8)
-    act132 = ng.conv2d(act131, weight132, strides=(1, 1, 1, 1), bias=bias132, scale=scale132, rshift_out=rshift132, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act132 = ng.relu(rshift_round_and_clip(conv132, rshift132, dtype=act_dtype))
 
 
     # [133] conv
@@ -250,8 +278,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale133 = ng.variable(dtype=scale_dtype, shape=(32,), name="decoder_block4.convolution2.0.scale")
     scale133.set_value(params["decoder_block4.convolution2.0.scale"])
 
+    conv133 = ng.conv2d(act132, weight133, strides=(1, 1, 1, 1), bias=bias133, scale=scale133, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift133 = ng.constant([13], dtype=ng.int8)
-    act133 = ng.conv2d(act132, weight133, strides=(1, 1, 1, 1), bias=bias133, scale=scale133, rshift_out=rshift133, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act133 = ng.relu(rshift_round_and_clip(conv133, rshift133, dtype=act_dtype))
 
 
     # [134] conv
@@ -261,8 +291,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     bias134 = ng.variable(dtype=bias_dtype, shape=(1,), name="depth_layer_half.0.bias")
     bias134.set_value(np.round(params["depth_layer_half.0.bias"] / (float) (1 << 7)).astype(params["depth_layer_half.0.bias"].dtype))
 
+    conv134 = ng.conv2d(act133, weight134, strides=(1, 1, 1, 1), bias=bias134, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift134 = ng.constant([18], dtype=ng.int8)
-    act134 = ng.conv2d(act133, weight134, strides=(1, 1, 1, 1), bias=bias134, rshift_out=rshift134, act_func=ng.sigmoid, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act134 = ng.sigmoid(ng.rshift_round(conv134, rshift134, dtype=act_dtype), lut_addrwidth=9, lut_clip=8.0, range_rate=0.5, dtype=act_dtype)
 
 
     # [135] interpolate
@@ -288,8 +320,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale138 = ng.variable(dtype=scale_dtype, shape=(32,), name="refine.0.0.scale")
     scale138.set_value(params["refine.0.0.scale"])
 
+    conv138 = ng.conv2d(act137, weight138, strides=(1, 1, 1, 1), bias=bias138, scale=scale138, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift138 = ng.constant([12], dtype=ng.int8)
-    act138 = ng.conv2d(act137, weight138, strides=(1, 1, 1, 1), bias=bias138, scale=scale138, rshift_out=rshift138, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act138 = ng.relu(rshift_round_and_clip(conv138, rshift138, dtype=act_dtype))
 
 
     # [139] conv
@@ -302,8 +336,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     scale139 = ng.variable(dtype=scale_dtype, shape=(32,), name="refine.1.0.scale")
     scale139.set_value(params["refine.1.0.scale"])
 
+    conv139 = ng.conv2d(act138, weight139, strides=(1, 1, 1, 1), bias=bias139, scale=scale139, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift139 = ng.constant([13], dtype=ng.int8)
-    act139 = ng.conv2d(act138, weight139, strides=(1, 1, 1, 1), bias=bias139, scale=scale139, rshift_out=rshift139, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act139 = ng.relu(rshift_round_and_clip(conv139, rshift139, dtype=act_dtype))
 
 
     # [140] conv
@@ -313,8 +349,10 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     bias140 = ng.variable(dtype=bias_dtype, shape=(1,), name="depth_layer_full.0.bias")
     bias140.set_value(np.round(params["depth_layer_full.0.bias"] / (float) (1 << 6)).astype(params["depth_layer_full.0.bias"].dtype))
 
+    conv140 = ng.conv2d(act139, weight140, strides=(1, 1, 1, 1), bias=bias140, asymmetric_clip=True, dtype=mid_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+
     rshift140 = ng.constant([18], dtype=ng.int8)
-    act140 = ng.conv2d(act139, weight140, strides=(1, 1, 1, 1), bias=bias140, rshift_out=rshift140, act_func=ng.sigmoid, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act140 = ng.sigmoid(ng.rshift_round(conv140, rshift140, dtype=act_dtype), lut_addrwidth=9, lut_clip=8.0, range_rate=0.5, dtype=act_dtype)
 
 
     return act140
