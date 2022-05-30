@@ -1,5 +1,6 @@
 import numpy as np
 import nngen as ng
+import torch
 
 def rshift_round_and_clip(act, rshift, dtype):
     return ng.clip(ng.rshift_round(act, rshift), asymmetric_clip=True, dtype=dtype)
@@ -26,7 +27,6 @@ class interpolate():
         if rshift != 0:
             print("interpolate:", rshift)
         else:
-            import torch
             out_shape = (out_height, out_width)
             mid = torch.tensor(input.astype(np.float32).transpose(0, 3, 1, 2))
             if mode == "nearest":
