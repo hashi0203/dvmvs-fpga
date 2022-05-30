@@ -1,6 +1,6 @@
 import numpy as np
 import nngen as ng
-from utils import clip
+from utils import round_and_clip
 
 n_depth_levels = 64
 
@@ -61,7 +61,7 @@ class fusion():
         for m in range(n_measurement_frames):
             fused_cost_volume += calculate_cost_volume_by_warping(image1, image2s[m], warpings[m], out_shape)
 
-        return clip(np.round((fused_cost_volume / n_measurement_frames) / (1 << rshift)), image1.dtype)
+        return round_and_clip((fused_cost_volume / n_measurement_frames) / (1 << rshift), image1.dtype)
 
 
 def cost_volume_fusion(act78, act79s, warpings, n_measurement_frames=2):
