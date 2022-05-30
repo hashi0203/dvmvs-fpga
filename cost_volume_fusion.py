@@ -66,7 +66,6 @@ class fusion():
 
 def cost_volume_fusion(act78, act79s, warpings, n_measurement_frames=2):
     # [80] conv
-    act80 = ng.extern([act78, *act79s], opcode=0x80, func=fusion(11, warpings, n_measurement_frames))
-    act80.shape = (1, 32, 48, 64)
+    act80 = ng.extern([act78, *act79s], shape=(1, 32, 48, 64), opcode=0x80, func=fusion(11, warpings, n_measurement_frames))
 
     return act80

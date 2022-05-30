@@ -14,10 +14,10 @@ from cost_volume_encoder import cost_volume_encoder
 from convlstm import LSTMFusion
 from cost_volume_decoder import cost_volume_decoder
 
-act_dtype = ng.int32
 weight_dtype = ng.int8
 bias_dtype = ng.int32
 scale_dtype = ng.int8
+act_dtype = ng.int16
 batchsize = 1
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
