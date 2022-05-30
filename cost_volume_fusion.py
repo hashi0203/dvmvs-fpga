@@ -3,8 +3,6 @@ import nngen as ng
 import torch
 from utils import round_and_clip
 
-n_depth_levels = 64
-
 # def grid_sample(image, warping):
 #     _, height, width, channels = image.shape
 #     warped_image = np.zeros(image.shape)
@@ -28,23 +26,9 @@ n_depth_levels = 64
 #     return warped_image
 
 
-def calculate_cost_volume_by_warping(image1, image2, warping, out_shape):
-    cost_volume = np.zeros(out_shape)
-
-    for depth_i in range(n_depth_levels):
-        # warped_image2 = grid_sample(image2, warping[depth_i][0])
-        warped_image2 = torch.nn.functional.grid_sample(input=torch.tensor(image2.astype(np.float32).transpose(0, 3, 1, 2)),
-                                                        grid=torch.tensor(warping[depth_i]),
-                                                        mode='bilinear',
-                                                        padding_mode='zeros',
-                                                        align_corners=True)
-        warped_image2 = warped_image2.detach().numpy().copy().transpose(0, 2, 3, 1)
-        cost_volume[:,:,:,depth_i] = np.sum(image1 * warped_image2, axis=3) / image1.shape[-1]
-
-    return cost_volume
-
-
 class fusion():
+    n_depth_levels = 64
+
     def __init__(self, rshift, K, pose1s, pose2ss):
         self.rshift = rshift
         self.K = torch.tensor(K)
@@ -68,6 +52,7 @@ class fusion():
 
 
     def calc_warpings(self, frame_number, batchsize, height, width, n_measurement_frames):
+        n_depth_levels = self.n_depth_levels
         K = self.K
         pose1 = self.pose1s[frame_number]
         pose2s = self.pose2ss[frame_number]
@@ -110,7 +95,25 @@ class fusion():
         return np.array(warpings)
 
 
+    def calculate_cost_volume_by_warping(self, image1, image2, warping, out_shape):
+        n_depth_levels = self.n_depth_levels
+        cost_volume = np.zeros(out_shape)
+
+        for depth_i in range(n_depth_levels):
+            # warped_image2 = grid_sample(image2, warping[depth_i][0])
+            warped_image2 = torch.nn.functional.grid_sample(input=torch.tensor(image2.astype(np.float32).transpose(0, 3, 1, 2)),
+                                                            grid=torch.tensor(warping[depth_i]),
+                                                            mode='bilinear',
+                                                            padding_mode='zeros',
+                                                            align_corners=True)
+            warped_image2 = warped_image2.detach().numpy().copy().transpose(0, 2, 3, 1)
+            cost_volume[:,:,:,depth_i] = np.sum(image1 * warped_image2, axis=3) / image1.shape[-1]
+
+        return cost_volume
+
+
     def __call__(self, frame_number, image1, n_measurement_frames, *image2s):
+        n_depth_levels = self.n_depth_levels
         rshift = self.rshift
 
         batchsize, height, width, _ = image1.shape
@@ -118,7 +121,7 @@ class fusion():
         fused_cost_volume = np.zeros(out_shape)
         warpings = self.calc_warpings(frame_number[0], batchsize, height, width, n_measurement_frames[0])
         for m in range(n_measurement_frames[0]):
-            fused_cost_volume += calculate_cost_volume_by_warping(image1, image2s[m], warpings[m], out_shape)
+            fused_cost_volume += self.calculate_cost_volume_by_warping(image1, image2s[m], warpings[m], out_shape)
 
         return round_and_clip((fused_cost_volume / n_measurement_frames) / (1 << rshift), image1.dtype)
 

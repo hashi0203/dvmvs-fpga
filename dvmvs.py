@@ -68,8 +68,8 @@ def prepare_input_value(value, lshift):
 for n in range(1):
     input_layer_value = prepare_input_value(inputs["input"].transpose(0, 2, 3, 1), 12)
     measurement_features_value = prepare_input_value(inputs["measurement_features"].transpose(0, 1, 3, 4, 2), 9)
-    n_measurement_frames_value = np.array([inputs["n_measurement_frames"]]).astype(np.int8)
-    frame_number_value = np.array([n]).astype(np.int8)
+    n_measurement_frames_value = np.array([inputs["n_measurement_frames"]]).astype(np.uint8)
+    frame_number_value = np.array([n]).astype(np.uint8)
     hidden_state_value = prepare_input_value(inputs["hidden_state"].transpose(0, 2, 3, 1), 14-1)
     cell_state_value = prepare_input_value(inputs["cell_state"].transpose(0, 2, 3, 1), 12)
 
@@ -93,17 +93,17 @@ for n in range(1):
     # eval_outs = ng.eval((cost_volume,) + skips + lstm_states[::-1] + (depth_full,), **ng_inputs)
 
     files = ["layer1", "layer2", "layer3", "layer4", "layer5",
-            "feature_one_sixteen", "feature_one_eight", "feature_quarter", "feature_half",
-            "cost_volume",
-            "skip0", "skip1", "skip2", "skip3", "bottom",
-            "cell_state", "hidden_state",
-            "depth_org"]
+             "feature_one_sixteen", "feature_one_eight", "feature_quarter", "feature_half",
+             "cost_volume",
+             "skip0", "skip1", "skip2", "skip3", "bottom",
+             "cell_state", "hidden_state",
+             "depth_org"]
     shifts = [11, 11, 11, 12, 13,
-            11, 11, 10, 9,
-            7,
-            13, 13, 13, 12, 13,
-            12, 14,
-            14]
+              11, 11, 10, 9,
+              7,
+              13, 13, 13, 12, 13,
+              12, 14,
+              14]
     # files = files[9:]
     # shifts = shifts[9:]
     for i in range(len(eval_outs)):
