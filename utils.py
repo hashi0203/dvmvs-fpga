@@ -1,4 +1,9 @@
 import numpy as np
+import nngen as ng
+
+def rshift_round_and_clip(act, rshift, dtype):
+    return ng.clip(ng.rshift_round(act, rshift), asymmetric_clip=True, dtype=dtype)
+
 
 def clip(input, dtype):
     info = np.iinfo(dtype)
