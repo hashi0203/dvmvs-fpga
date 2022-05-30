@@ -1,5 +1,10 @@
 import numpy as np
 
+def clip(input, dtype):
+    info = np.iinfo(dtype)
+    return np.clip(input.astype(np.int64), info.min, info.max).astype(dtype)
+
+
 class interpolate():
     def __init__(self, out_height, out_width, rshift, mode):
         self.out_height, self.out_width = out_height, out_width

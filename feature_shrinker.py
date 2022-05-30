@@ -1,5 +1,5 @@
 import nngen as ng
-from interpolate import interpolate
+from utils import interpolate
 
 def feature_shrinker(act3, act14, act25, act43, act61, params,
                      weight_dtype=ng.int8, bias_dtype=ng.int32, act_dtype=ng.int32):
@@ -20,8 +20,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params,
 
 
     # [63] interpolate
-    act63 = ng.extern([act62], opcode=0x63, func=interpolate(4, 6, 0, "nearest"))
-    act63.shape = (1, 4, 6, 32)
+    act63 = ng.extern([act62], opcode=0x63, func=interpolate(4, 6, 0, "nearest"), shape = (1, 4, 6, 32))
 
 
     # [64] conv
@@ -61,8 +60,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params,
 
 
     # [67] interpolate
-    act67 = ng.extern([act65], opcode=0x67, func=interpolate(8, 12, 0, "nearest"))
-    act67.shape = (1, 8, 12, 32)
+    act67 = ng.extern([act65], opcode=0x67, func=interpolate(8, 12, 0, "nearest"), shape = (1, 8, 12, 32))
 
 
     # [68] conv
@@ -102,8 +100,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params,
 
 
     # [71] interpolate
-    act71 = ng.extern([act69], opcode=0x71, func=interpolate(16, 24, 0, "nearest"))
-    act71.shape = (1, 16, 24, 32)
+    act71 = ng.extern([act69], opcode=0x71, func=interpolate(16, 24, 0, "nearest"), shape = (1, 16, 24, 32))
 
 
     # [72] conv
@@ -143,8 +140,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params,
 
 
     # [75] interpolate
-    act75 = ng.extern([act73], opcode=0x75, func=interpolate(32, 48, 0, "nearest"))
-    act75.shape = (1, 32, 48, 32)
+    act75 = ng.extern([act73], opcode=0x75, func=interpolate(32, 48, 0, "nearest"), shape = (1, 32, 48, 32))
 
 
     # [76] conv

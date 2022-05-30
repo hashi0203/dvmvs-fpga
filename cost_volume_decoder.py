@@ -1,5 +1,5 @@
 import nngen as ng
-from interpolate import interpolate
+from utils import interpolate
 
 def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
                         weight_dtype=ng.int8, bias_dtype=ng.int32, scale_dtype=ng.int8, act_dtype=ng.int32):

@@ -1,6 +1,6 @@
 import numpy as np
 import nngen as ng
-
+from utils import clip
 
 class celu():
     def __init__(self, xshift):
@@ -36,7 +36,7 @@ class ln():
         eps = 1e-5
         e = np.mean(x.reshape(-1, x.shape[-1]), axis=0)
         v = np.var(x.reshape(-1, x.shape[-1]), axis=0)
-        return np.round((x - e) / np.sqrt(v + eps) * (1 << self.lshift)).astype(x.dtype)
+        return clip(np.round((x - e) / np.sqrt(v + eps) * (1 << self.lshift)), x.dtype)
 
 
 def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=ng.int32):
