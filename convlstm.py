@@ -1,6 +1,6 @@
 import numpy as np
 import nngen as ng
-from utils import rshift_round_and_clip, round_and_clip
+from utils import sigmoid, rshift_round_and_clip, round_and_clip
 
 class celu():
     def __init__(self, xshift):
@@ -58,7 +58,7 @@ def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=n
     slice105s = [ng.slice_(act104, (0, 0, 0, i * 512), (1, 2, 3, (i+1) * 512), (1, 1, 1, 1)) for i in range(4)]
 
     rshift105 = ng.constant([4], dtype=ng.int8)
-    ii105, ff105, oo105 = [ng.sigmoid(ng.rshift_round(slice105s[i], rshift105), lut_addrwidth=9, lut_clip=8.0, range_rate=0.5, dtype=act_dtype) for i in range(3)]
+    ii105, ff105, oo105 = [sigmoid(ng.rshift_round(slice105s[i], rshift105)) for i in range(3)]
 
     gg105 = ng.extern([slice105s[3]], opcode=0x105, func=lambda x : celu(12)(ln(12)(x)))
 
