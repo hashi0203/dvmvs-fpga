@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
-from logging import PlaceHolder
 
-import sys
 import os
 from xml.sax.handler import feature_external_ges
 
