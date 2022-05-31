@@ -52,8 +52,6 @@ reference_features = feature_shrinker(*layers, params)
 print("preparing cost volume fusion...")
 cost_volume = cost_volume_fusion(frame_number, reference_features[0], n_measurement_frames, measurement_features,
                                  inputs["half_K"], inputs["current_pose"], inputs["measurement_poses"])
-                                #  inputs["half_K"], inputs["reference_pose"], inputs["measurement_poses"])
-                                #  inputs["half_K"], inputs["pose1s"], inputs["pose2ss"])
 
 print("preparing cost volume encoder...")
 skips = cost_volume_encoder(*reference_features, cost_volume, params)
@@ -115,7 +113,6 @@ for n in range(len(inputs["reference_image"])):
 
     ng_inputs = {}
     input_layer_value = prepare_input_value(inputs["reference_image"][n].transpose(0, 2, 3, 1), 12)
-    # input_layer_value = prepare_input_value(inputs["input"][n].transpose(0, 2, 3, 1), 12)
     ng_inputs["input_layer"] = input_layer_value
 
 
@@ -123,7 +120,6 @@ for n in range(len(inputs["reference_image"])):
         eval_outs = ng.eval(layers + reference_features[::-1], **ng_inputs)
         keyframe_buffer.add_new_keyframe(inputs["reference_pose"][n][0], eval_outs[len(layers)+3])
         for i in range(len(eval_outs)):
-            # ground_truth = outputs[files[i]]
             ground_truth = outputs[files[i]][idx]
             print(files[i], ground_truth.shape)
             output_layer_value = eval_outs[i].transpose(0, 3, 1, 2) / (1 << shifts[i])
@@ -136,24 +132,10 @@ for n in range(len(inputs["reference_image"])):
     measurement_features_value = []
     for measurement_frame in keyframe_buffer.get_best_measurement_frames(inputs["reference_pose"][n][0], max_n_measurement_frames):
         measurement_features_value.append(measurement_frame[1])
-        # print(measurement_frame[0])
-    #     print(measurement_frame[1].shape, measurement_frame[1].dtype)
-    # print(len(measurement_features_value))
     for i in range(max_n_measurement_frames - len(measurement_features_value)):
         measurement_features_value.append(np.zeros_like(measurement_features_value[0]))
-    # print(inputs["measurement_features"][idx].transpose(0, 1, 3, 4, 2).shape, np.array(measurement_features_value)[0].shape)
-    print(np.corrcoef(prepare_input_value(inputs["measurement_features"][idx].transpose(0, 1, 3, 4, 2), 9).reshape(-1), np.array(measurement_features_value).reshape(-1)))
-    # measurement_features_value = np.array(measurement_features_value)
-    # print(measurement_features_value.dtype)
-    # measurement_features_value = prepare_input_value(inputs["measurement_features"][idx].transpose(0, 1, 3, 4, 2), 9)
     n_measurement_frames_value = np.array([inputs["n_measurement_frames"][idx]]).astype(np.uint8)
-    # print(inputs["n_measurement_frames"][idx])
     frame_number_value = np.array([idx]).astype(np.uint8)
-
-    # lstm_state = inputs["hidden_state"][n], inputs["cell_state"][n]
-    # lstm_state = calc(lstm_state, previous_depth, previous_pose, inputs["reference_pose"][n])
-    # hidden_state_value = prepare_input_value(lstm_state[0].transpose(0, 2, 3, 1), 14-1)
-    # cell_state_value = prepare_input_value(lstm_state[1].transpose(0, 2, 3, 1), 12)
     hidden_state_value, cell_state_value = calc(lstm_state, previous_depth, previous_pose, inputs["reference_pose"][n])
 
     for m in range(max_n_measurement_frames):
@@ -179,8 +161,8 @@ for n in range(len(inputs["reference_image"])):
     # files = files[9:]
     # shifts = shifts[9:]
     for i in range(len(eval_outs)):
-        # if i != len(files) - 1:
-        #     continue
+        if i != len(files) - 1:
+            continue
         if i < 9:
             ground_truth = outputs[files[i]][idx+1]
         else:
