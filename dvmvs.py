@@ -14,13 +14,15 @@ from cost_volume_fusion import cost_volume_fusion
 from cost_volume_encoder import cost_volume_encoder
 from convlstm import LSTMFusion
 from cost_volume_decoder import cost_volume_decoder
+
 from verify import Verifier
+from simulate import Simulator
 
 
 def prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype):
     print("preparing placeholders...")
 
-    input_layer = ng.placeholder(dtype=act_dtype, shape=(batchsize, 64, 96, 3), name='input_layer')
+    reference_image = ng.placeholder(dtype=act_dtype, shape=(batchsize, 64, 96, 3), name='reference_image')
     measurement_features = [ng.placeholder(dtype=act_dtype, shape=(batchsize, 32, 48, 32), name='measurement_feature%d' % m)
                             for m in range(max_n_measurement_frames)]
     n_measurement_frames = ng.placeholder(dtype=ng.uint8, shape=(1,), name='n_measurement_frames')
@@ -31,13 +33,13 @@ def prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype):
     # feature_list = ["half", "quarter", "one_eight", "one_sixteen"]
     # reference_features = [ng.placeholder(dtype=act_dtype, shape=(batchsize, 32 >> i, 48 >> i, 32), name='feature_%s' % feature_list[i]) for i in range(4)]
 
-    return input_layer, measurement_features, n_measurement_frames, frame_number, hidden_state, cell_state
+    return reference_image, measurement_features, n_measurement_frames, frame_number, hidden_state, cell_state
 
 
-def prepare_nets(input_layer, measurement_features, n_measurement_frames, frame_number, hidden_state, cell_state):
+def prepare_nets(reference_image, measurement_features, n_measurement_frames, frame_number, hidden_state, cell_state):
     print("preparing feature extractor...")
     start_time = time.process_time()
-    layers = feature_extractor(input_layer, params)
+    layers = feature_extractor(reference_image, params)
     print("\t%f [s]" % (time.process_time() - start_time))
 
     print("preparing feature shrinker...")
@@ -63,7 +65,7 @@ def prepare_nets(input_layer, measurement_features, n_measurement_frames, frame_
 
     print("preparing cost volume decoder...")
     start_time = time.process_time()
-    depth_full = cost_volume_decoder(input_layer, *skips[:-1], lstm_states[0], params)
+    depth_full = cost_volume_decoder(reference_image, *skips[:-1], lstm_states[0], params)
     print("\t%f [s]" % (time.process_time() - start_time))
 
     return layers, reference_features, cost_volume, skips, lstm_states, depth_full
@@ -87,9 +89,9 @@ if __name__ == '__main__':
     nets = prepare_nets(*input_layers)
     output_layer = nets[-1]
 
-    v = Verifier(inputs, outputs, max_n_measurement_frames, act_dtype)
-    v.verify_all(*nets, verbose=False)
-    v.verify_one(*nets, verbose=True)
+    verifier = Verifier(inputs, outputs, max_n_measurement_frames, act_dtype)
+    input_layer_values, output_layer_value = verifier.verify_all(*nets, verbose=False)
+    input_layer_values, output_layer_value = verifier.verify_one(*nets, verbose=True)
 
 
     # Convert the NNgen dataflow to a hardware description (Verilog HDL and IP-XACT)
@@ -117,3 +119,6 @@ if __name__ == '__main__':
     print('# weights was saved at %s' % param_filename)
     print("\t%f [s]" % (time.process_time() - start_time))
 
+
+    # simulator = Simulator(project_name, targ, param_data, axi_datawidth, chunk_size, act_dtype)
+    # simulator.simulate(input_layers, input_layer_values, output_layer, output_layer_value)

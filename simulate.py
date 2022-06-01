@@ -17,7 +17,7 @@ class Simulator():
         self.act_dtype = act_dtype
 
 
-    def simulate(self, input_layers, output_layer):
+    def simulate(self, input_layers, input_layer_values, output_layer, output_layer_value):
         project_name = self.project_name
         targ = self.targ
         param_data = self.param_data
@@ -34,8 +34,7 @@ class Simulator():
 
         param_bytes = len(param_data)
 
-        variable_addr = int(
-            math.ceil((input_layer.addr + input_layer.memory_size) / chunk_size)) * chunk_size
+        variable_addr = int(math.ceil((input_layers.addr + input_layer.memory_size) / chunk_size)) * chunk_size
         check_addr = int(math.ceil((variable_addr + param_bytes) / chunk_size)) * chunk_size
         tmp_addr = int(math.ceil((check_addr + output_layer.memory_size) / chunk_size)) * chunk_size
 
@@ -49,8 +48,7 @@ class Simulator():
                     max(int(math.ceil(axi_datawidth / act_dtype.width)), par_ich))
 
         # parameters (variable and constant)
-        axi.set_memory(mem, param_data, memimg_datawidth,
-                    8, variable_addr)
+        axi.set_memory(mem, param_data, memimg_datawidth, 8, variable_addr)
 
         # verification data
         axi.set_memory(mem, output_layer_value, memimg_datawidth,
@@ -67,9 +65,6 @@ class Simulator():
         rst.assign(Not(resetn))
 
         # AXI memory model
-        if outputfile is None:
-            outputfile = os.path.splitext(os.path.basename(__file__))[0] + '.out'
-
         memimg_name = 'memimg_' + outputfile
 
         memory = axi.AxiMemoryModel(m, 'memory', clk, rst,
@@ -149,8 +144,7 @@ class Simulator():
         )
 
         # output source code
-        if filename is not None:
-            m.to_verilog(filename)
+        m.to_verilog(filename)
 
         # run simulation
         sim = simulation.Simulator(m, sim=simtype)

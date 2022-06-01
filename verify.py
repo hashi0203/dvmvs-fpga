@@ -83,6 +83,9 @@ class Verifier():
                                          optimal_R_score=test_optimal_R_measure,
                                          store_return_indices=False)
 
+        input_layer_values = None
+        output_layer_value = None
+
         start_time = time.process_time()
 
         lstm_state = None
@@ -104,8 +107,8 @@ class Verifier():
                 continue
 
             ng_inputs = {}
-            input_layer_value = prepare_input_value(inputs["reference_image"][n].transpose(0, 2, 3, 1), 12)
-            ng_inputs["input_layer"] = input_layer_value
+            reference_image_value = prepare_input_value(inputs["reference_image"][n].transpose(0, 2, 3, 1), 12)
+            ng_inputs["reference_image"] = reference_image_value
 
             if response == 0:
                 eval_outs = ng.eval(layers + reference_features[::-1], **ng_inputs)
@@ -129,7 +132,9 @@ class Verifier():
             ng_inputs["hidden_state"] = hidden_state_value
             ng_inputs["cell_state"] = cell_state_value
 
+            input_layer_values = ng_inputs
             eval_outs = ng.eval(layers + reference_features[::-1] + (cost_volume,) + skips + lstm_states[::-1] + (depth_full,), **ng_inputs)
+            output_layer_value = eval_outs[-1]
 
             lstm_state = eval_outs[-2], eval_outs[-3]
             keyframe_buffer.add_new_keyframe(inputs["reference_pose"][n][0], eval_outs[len(layers)+3])
@@ -141,6 +146,7 @@ class Verifier():
             idx += 1
 
         print("\t%f [s]" % (time.process_time() - start_time))
+        return input_layer_values, output_layer_value
 
 
     def verify_one(self, layers, reference_features, cost_volume, skips, lstm_states, depth_full, verbose=False):
@@ -162,8 +168,8 @@ class Verifier():
         print("evaluating %05d.png ..." % (n + 3))
 
         ng_inputs = {}
-        input_layer_value = prepare_input_value(inputs["reference_image"][n].transpose(0, 2, 3, 1), 12)
-        ng_inputs["input_layer"] = input_layer_value
+        reference_image_value = prepare_input_value(inputs["reference_image"][n].transpose(0, 2, 3, 1), 12)
+        ng_inputs["reference_image"] = reference_image_value
 
         measurement_features_value = prepare_input_value(inputs["measurement_features"][idx].transpose(0, 1, 3, 4, 2), 9)
         n_measurement_frames_value = np.array([inputs["n_measurement_frames"][idx]]).astype(np.uint8)
@@ -181,8 +187,11 @@ class Verifier():
         ng_inputs["hidden_state"] = hidden_state_value
         ng_inputs["cell_state"] = cell_state_value
 
+        input_layer_values = ng_inputs
         eval_outs = ng.eval(layers + reference_features[::-1] + (cost_volume,) + skips + lstm_states[::-1] + (depth_full,), **ng_inputs)
+        output_layer_value = eval_outs[-1]
 
         print_results(eval_outs, idx, verbose)
 
         print("\t%f [s]" % (time.process_time() - start_time))
+        return input_layer_values, output_layer_value
