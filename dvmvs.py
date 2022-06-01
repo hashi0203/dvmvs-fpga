@@ -25,8 +25,8 @@ def prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype):
     reference_image = ng.placeholder(dtype=act_dtype, shape=(batchsize, 64, 96, 3), name='reference_image')
     measurement_features = [ng.placeholder(dtype=act_dtype, shape=(batchsize, 32, 48, 32), name='measurement_feature%d' % m)
                             for m in range(max_n_measurement_frames)]
-    n_measurement_frames = ng.placeholder(dtype=ng.uint8, shape=(1,), name='n_measurement_frames')
-    frame_number = ng.placeholder(dtype=ng.uint8, shape=(1,), name='frame_number')
+    n_measurement_frames = ng.placeholder(dtype=act_dtype, shape=(1,), name='n_measurement_frames')
+    frame_number = ng.placeholder(dtype=act_dtype, shape=(1,), name='frame_number')
     hidden_state = ng.placeholder(dtype=act_dtype, shape=(batchsize, 2, 3, 512), name='hidden_state')
     cell_state = ng.placeholder(dtype=act_dtype, shape=(batchsize, 2, 3, 512), name='cell_state')
 
@@ -89,35 +89,61 @@ if __name__ == '__main__':
     nets = prepare_nets(*input_layers)
     output_layer = nets[-1]
 
-    verifier = Verifier(inputs, outputs, max_n_measurement_frames, act_dtype)
-    input_layer_values, output_layer_value = verifier.verify_all(*nets, verbose=False)
-    input_layer_values, output_layer_value = verifier.verify_one(*nets, verbose=True)
+
+    skip_verify = False
+    skip_to_ipxact = False
+    skip_export = False
 
 
-    # Convert the NNgen dataflow to a hardware description (Verilog HDL and IP-XACT)
-    print("converting NNgen dataflow to hardware description...")
-    silent = True
+    input_filename = os.path.join(base_dir, 'params_nngen/input')
+    output_filename = os.path.join(base_dir, 'params_nngen/output')
+    if skip_verify:
+        print("loading input and output values...")
+        input_file = np.load(input_filename)
+        input_layer_values = {}
+        for f in input_file.files:
+            input_layer_values[f] = input_file[f]
+        output_file = np.load(output_filename)
+        output_layer_value = output_file[output_file.files[0]]
+    else:
+        print("verifying...")
+        verifier = Verifier(inputs, outputs, max_n_measurement_frames, act_dtype)
+        input_layer_values, output_layer_value = verifier.verify_all(*nets, verbose=False)
+        input_layer_values, output_layer_value = verifier.verify_one(*nets, verbose=True)
+        np.savez_compressed(input_filename, **input_layer_values)
+        np.savez_compressed(output_filename, output=output_layer_value)
+
+
     axi_datawidth = 32
+    if skip_to_ipxact:
+        print("skiping to_ipxact...")
+    else:
+        # Convert the NNgen dataflow to a hardware description (Verilog HDL and IP-XACT)
+        print("converting NNgen dataflow to hardware description...")
+        # to IP-XACT (the method returns Veriloggen object, as well as to_veriloggen)
+        start_time = time.process_time()
+        targ = ng.to_ipxact([output_layer], project_name, silent=True,
+                            config={'maxi_datawidth': axi_datawidth})
+        print("\t%f [s]" % (time.process_time() - start_time))
+        print('# IP-XACT was generated. Check the current directory.')
 
-    # to IP-XACT (the method returns Veriloggen object, as well as to_veriloggen)
-    start_time = time.process_time()
-    targ = ng.to_ipxact([output_layer], project_name, silent=silent,
-                        config={'maxi_datawidth': axi_datawidth})
-    print("\t%f [s]" % (time.process_time() - start_time))
-    print('# IP-XACT was generated. Check the current directory.')
 
-
-    # Save the quantized weights
-    print("saving weights...")
-    # convert weight values to a memory image:
-    # on a real FPGA platform, this image will be used as a part of the model definition.
-    start_time = time.process_time()
-    param_filename = os.path.join(base_dir, 'params/%s_nngen' % project_name)
+    param_filename = os.path.join(base_dir, 'params_nngen/params')
     chunk_size = 64
-    param_data = ng.export_ndarray([output_layer], chunk_size)
-    np.savez_compressed(param_filename, param_data)
-    print('# weights was saved at %s' % param_filename)
-    print("\t%f [s]" % (time.process_time() - start_time))
+    if skip_export:
+        print("loading params...")
+        param_file = np.load(param_filename)
+        param_data = param_file[param_file.files[0]]
+    else:
+        # Save the quantized weights
+        print("saving params...")
+        # convert weight values to a memory image:
+        # on a real FPGA platform, this image will be used as a part of the model definition.
+        start_time = time.process_time()
+        param_data = ng.export_ndarray([output_layer], chunk_size)
+        np.savez_compressed(param_filename, param_data)
+        print('# weights was saved at %s' % param_filename)
+        print("\t%f [s]" % (time.process_time() - start_time))
 
 
     # simulator = Simulator(project_name, targ, param_data, axi_datawidth, chunk_size, act_dtype)

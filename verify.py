@@ -121,8 +121,8 @@ class Verifier():
                 measurement_features_value.append(measurement_frame[1])
             for _ in range(max_n_measurement_frames - len(measurement_features_value)):
                 measurement_features_value.append(np.zeros_like(measurement_features_value[0]))
-            n_measurement_frames_value = np.array([inputs["n_measurement_frames"][idx]]).astype(np.uint8)
-            frame_number_value = np.array([idx]).astype(np.uint8)
+            n_measurement_frames_value = np.array([inputs["n_measurement_frames"][idx]]).astype(np.int64)
+            frame_number_value = np.array([idx]).astype(np.int64)
             hidden_state_value, cell_state_value = calc(lstm_state, previous_depth, previous_pose, inputs["reference_pose"][n])
 
             for m in range(max_n_measurement_frames):
