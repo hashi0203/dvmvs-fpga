@@ -1,24 +1,17 @@
+import time
 import numpy as np
 import nngen as ng
 
 from keyframe_buffer import KeyframeBuffer
 from utils import lstm_state_calculator
 
-class Tester():
+class Verifier():
 
-    def __init__(self, inputs, outputs, max_n_measurement_frames,
-                 layers, reference_features, cost_volume, skips,
-                 lstm_states, depth_full, act_dtype):
+    def __init__(self, inputs, outputs, max_n_measurement_frames, act_dtype):
 
         self.inputs = inputs
         self.outputs = outputs
         self.max_n_measurement_frames = max_n_measurement_frames
-        self.layers = layers
-        self.reference_features = reference_features
-        self.cost_volume = cost_volume
-        self.skips = skips
-        self.lstm_states = lstm_states
-        self.depth_full = depth_full
         self.act_dtype = act_dtype
 
         self.files = ["layer1", "layer2", "layer3", "layer4", "layer5",
@@ -72,15 +65,9 @@ class Tester():
         print()
 
 
-    def test_all(self, verbose=False):
+    def verify_all(self, layers, reference_features, cost_volume, skips, lstm_states, depth_full, verbose=False):
         inputs = self.inputs
         max_n_measurement_frames = self.max_n_measurement_frames
-        layers = self.layers
-        reference_features = self.reference_features
-        cost_volume = self.cost_volume
-        skips = self.skips
-        lstm_states = self.lstm_states
-        depth_full = self.depth_full
         shifts = self.shifts
         prepare_input_value = self.prepare_input_value
         calc_depth = self.calc_depth
@@ -95,6 +82,8 @@ class Tester():
                                          optimal_t_score=test_optimal_t_measure,
                                          optimal_R_score=test_optimal_R_measure,
                                          store_return_indices=False)
+
+        start_time = time.process_time()
 
         lstm_state = None
         previous_depth = None
@@ -151,20 +140,18 @@ class Tester():
 
             idx += 1
 
+        print("\t%f [s]" % (time.process_time() - start_time))
 
-    def test_one(self, verbose=False):
+
+    def verify_one(self, layers, reference_features, cost_volume, skips, lstm_states, depth_full, verbose=False):
         inputs = self.inputs
         outputs = self.outputs
         max_n_measurement_frames = self.max_n_measurement_frames
-        layers = self.layers
-        reference_features = self.reference_features
-        cost_volume = self.cost_volume
-        skips = self.skips
-        lstm_states = self.lstm_states
-        depth_full = self.depth_full
         prepare_input_value = self.prepare_input_value
         calc_depth = self.calc_depth
         print_results = self.print_results
+
+        start_time = time.process_time()
 
         calc = lstm_state_calculator(inputs, prepare_input_value, 14-1, 12)
 
@@ -197,3 +184,5 @@ class Tester():
         eval_outs = ng.eval(layers + reference_features[::-1] + (cost_volume,) + skips + lstm_states[::-1] + (depth_full,), **ng_inputs)
 
         print_results(eval_outs, idx, verbose)
+
+        print("\t%f [s]" % (time.process_time() - start_time))
