@@ -63,7 +63,7 @@ class Simulator():
         # tmp_addr = check_addr + size_check
 
         memimg_datawidth = 32
-        mem = np.zeros([1024 * 1024 * 4096 // memimg_datawidth], dtype=np.int64)
+        mem = np.zeros([1024 * 1024 * 2048 // memimg_datawidth], dtype=np.int64)
         # mem = mem + [100]
 
         # placeholder
