@@ -25,20 +25,20 @@ def prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype):
     print("preparing placeholders...")
 
     reference_image = ng.placeholder(dtype=act_dtype, shape=(batchsize, 64, 96, 3), name='reference_image')
+    frame_number = ng.placeholder(dtype=act_dtype, shape=(1,), name='frame_number')
+    n_measurement_frames = ng.placeholder(dtype=act_dtype, shape=(1,), name='n_measurement_frames')
     measurement_features = [ng.placeholder(dtype=act_dtype, shape=(batchsize, 32, 48, 32), name='measurement_feature%d' % m)
                             for m in range(max_n_measurement_frames)]
-    n_measurement_frames = ng.placeholder(dtype=act_dtype, shape=(1,), name='n_measurement_frames')
-    frame_number = ng.placeholder(dtype=act_dtype, shape=(1,), name='frame_number')
     hidden_state = ng.placeholder(dtype=act_dtype, shape=(batchsize, 2, 3, 512), name='hidden_state')
     cell_state = ng.placeholder(dtype=act_dtype, shape=(batchsize, 2, 3, 512), name='cell_state')
 
     # feature_list = ["half", "quarter", "one_eight", "one_sixteen"]
     # reference_features = [ng.placeholder(dtype=act_dtype, shape=(batchsize, 32 >> i, 48 >> i, 32), name='feature_%s' % feature_list[i]) for i in range(4)]
 
-    return reference_image, measurement_features, n_measurement_frames, frame_number, hidden_state, cell_state
+    return reference_image, frame_number, n_measurement_frames, measurement_features, hidden_state, cell_state
 
 
-def prepare_nets(reference_image, measurement_features, n_measurement_frames, frame_number, hidden_state, cell_state):
+def prepare_nets(reference_image, frame_number, n_measurement_frames, measurement_features, hidden_state, cell_state):
     print("preparing feature extractor...")
     layers = feature_extractor(reference_image, params)
 
@@ -139,14 +139,14 @@ if __name__ == '__main__':
 
 
     flat_input_layers = []
-    for l in input_layers:
-        if isinstance(l, list):
-            flat_input_layers.extend(l)
+    for layer in input_layers:
+        if isinstance(layer, list):
+            flat_input_layers.extend(layer)
         else:
-            flat_input_layers.append(l)
+            flat_input_layers.append(layer)
 
-    measurement_name = ["measurement_feature%d" % m for m in range(max_n_measurement_frames)]
-    input_names = ["reference_image"] + measurement_name + ["n_measurement_frames", "frame_number", "hidden_state", "cell_state"]
+    measurement_names = ["measurement_feature%d" % m for m in range(max_n_measurement_frames)]
+    input_names = ["reference_image", "frame_number", "n_measurement_frames"] + measurement_names + ["hidden_state", "cell_state"]
     flat_input_layer_values = []
     for name in input_names:
         if isinstance(input_layer_values[name], list):
@@ -154,6 +154,11 @@ if __name__ == '__main__':
         else:
             flat_input_layer_values.append(input_layer_values[name])
 
+    for name, layer in zip(input_names, flat_input_layers):
+        print("%20s: %6d," % (name, layer.addr), layer.aligned_shape)
 
+    print("simulating verilog code...")
+    start_time = time.process_time()
     simulator = Simulator(project_name, targ, param_data, axi_datawidth, chunk_size, par_ich, par_och, act_dtype)
     simulator.simulate(flat_input_layers, flat_input_layer_values, output_layer, output_layer_value)
+    print("\t%f [s]" % (time.process_time() - start_time))
