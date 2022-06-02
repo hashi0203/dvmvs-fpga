@@ -37,26 +37,32 @@ def prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype):
 
 
 def prepare_nets(reference_image, frame_number, n_measurement_frames, measurement_features, hidden_state, cell_state):
+    externs = []
+
     print("preparing feature extractor...")
     layers = feature_extractor(reference_image, params)
 
     print("preparing feature shrinker...")
-    reference_features = feature_shrinker(*layers, params)
+    reference_features, extern = feature_shrinker(*layers, params)
+    externs.extend(extern)
 
     print("preparing cost volume fusion...")
-    cost_volume = cost_volume_fusion(frame_number, reference_features[0], n_measurement_frames, measurement_features,
+    cost_volume, extern = cost_volume_fusion(frame_number, reference_features[0], n_measurement_frames, measurement_features,
                                      inputs["half_K"], inputs["current_pose"], inputs["measurement_poses"])
+    externs.extend(extern)
 
     print("preparing cost volume encoder...")
-    skips = cost_volume_encoder(*reference_features, cost_volume, params)
+    skips = cost_volume_encoder(*reference_features, *cost_volume, params)
 
     print("preparing LSTM fusion...")
-    lstm_states = LSTMFusion(skips[-1], hidden_state, cell_state, params)
+    lstm_states, extern = LSTMFusion(skips[-1], hidden_state, cell_state, params)
+    externs.extend(extern)
 
     print("preparing cost volume decoder...")
-    depth_full = cost_volume_decoder(reference_image, *skips[:-1], lstm_states[0], params)
+    depth_full, extern = cost_volume_decoder(reference_image, *skips[:-1], lstm_states[0], params)
+    externs.extend(extern)
 
-    return layers, reference_features, cost_volume, skips, lstm_states, depth_full
+    return (layers, reference_features, cost_volume, skips, lstm_states, depth_full), externs
 
 
 if __name__ == '__main__':
@@ -77,8 +83,8 @@ if __name__ == '__main__':
 
     start_time = time.process_time()
     input_layers = prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype)
-    nets = prepare_nets(*input_layers)
-    output_layer = nets[-1]
+    nets, externs = prepare_nets(*input_layers)
+    output_layer = nets[-1][0]
     print("\t%f [s]" % (time.process_time() - start_time))
 
 
@@ -154,6 +160,12 @@ if __name__ == '__main__':
 
     for name, layer in zip(input_names, flat_input_layers):
         print("%20s: %6d," % (name, layer.addr), layer.aligned_shape)
+
+    for extern in externs:
+        print(extern[-1])
+        print("\toutput: addr %d, shape" % extern[0].addr, extern[0].shape, ", aligned_shape", extern[0].aligned_shape)
+        for i, e in enumerate(extern[1]):
+            print("\tinput%d: addr %d, shape" % (i, e.addr), e.shape, ", aligned_shape", e.aligned_shape)
 
     print("simulating verilog code...")
     start_time = time.process_time()

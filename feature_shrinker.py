@@ -5,6 +5,8 @@ from utils import rshift_round_and_clip, interpolate
 def feature_shrinker(act3, act14, act25, act43, act61, params,
                      weight_dtype=ng.int8, bias_dtype=ng.int32, act_dtype=ng.int16, mid_dtype=ng.int32):
 
+    externs = []
+
     # [62] conv
     weight62 = ng.variable(dtype=weight_dtype, shape=(32, 1, 1, 320), name="fpn.inner_blocks.4.weight")
     weight62.set_value(params["fpn.inner_blocks.4.weight"])
@@ -18,6 +20,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params,
 
     # [63] interpolate
     act63 = ng.extern([act62], shape=(1, 4, 6, 32), opcode=0x63, func=interpolate(4, 6, 0, "nearest"))
+    externs.append((act63, [act62], "act63 = interpolate(4, 6, 0, 'nearest')(act62)"))
 
 
     # [64] conv
@@ -50,6 +53,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params,
 
     # [67] interpolate
     act67 = ng.extern([act65], shape=(1, 8, 12, 32), opcode=0x67, func=interpolate(8, 12, 0, "nearest"))
+    externs.append((act67, [act65], "act67 = interpolate(8, 12, 0, 'nearest')(act65)"))
 
 
     # [68] conv
@@ -82,6 +86,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params,
 
     # [71] interpolate
     act71 = ng.extern([act69], shape=(1, 16, 24, 32), opcode=0x71, func=interpolate(16, 24, 0, "nearest"))
+    externs.append((act71, [act69], "act71 = interpolate(16, 24, 0, 'nearest')(act69)"))
 
 
     # [72] conv
@@ -114,6 +119,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params,
 
     # [75] interpolate
     act75 = ng.extern([act73], shape=(1, 32, 48, 32), opcode=0x75, func=interpolate(32, 48, 0, "nearest"))
+    externs.append((act75, [act73], "act75 = interpolate(32, 48, 0, 'nearest')(act73)"))
 
 
     # [76] conv
@@ -144,4 +150,4 @@ def feature_shrinker(act3, act14, act25, act43, act61, params,
     act78 = ng.conv2d(act77, weight78, strides=(1, 1, 1, 1), bias=bias78, rshift_out=rshift78, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
-    return act78, act74, act70, act66
+    return (act78, act74, act70, act66), externs

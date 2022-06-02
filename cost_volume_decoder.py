@@ -5,8 +5,11 @@ from utils import sigmoid, interpolate
 def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
                         weight_dtype=ng.int8, bias_dtype=ng.int32, scale_dtype=ng.int8, act_dtype=ng.int16, mid_dtype=ng.int32):
 
+    externs = []
+
     # [108] interpolate
     act108 = ng.extern([act107], shape=(1, 4, 6, 512), opcode=0x108, func=interpolate(4, 6, 0, "bilinear"))
+    externs.append((act108, [act107], "act108 = interpolate(4, 6, 0, 'bilinear')(act107)"))
 
 
     # [109] conv
@@ -69,6 +72,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
 
     # [114] interpolate
     act114 = ng.extern([act112], shape=(1, 8, 12, 256), opcode=0x114, func=interpolate(8, 12, 0, "bilinear"))
+    externs.append((act114, [act112], "act114 = interpolate(8, 12, 0, 'bilinear')(act112)"))
 
 
     # [115] conv
@@ -87,6 +91,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
 
     # [116] interpolate
     act116 = ng.extern([act113], shape=(1, 8, 12, 1), opcode=0x116, func=interpolate(8, 12, 0, "bilinear"))
+    externs.append((act116, [act113], "act116 = interpolate(8, 12, 0, 'bilinear')(act113)"))
 
 
     # [117] cat
@@ -135,6 +140,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
 
     # [121] interpolate
     act121 = ng.extern([act119], shape=(1, 16, 24, 128), opcode=0x121, func=interpolate(16, 24, 0, "bilinear"))
+    externs.append((act121, [act119], "act121 = interpolate(16, 24, 0, 'bilinear')(act119)"))
 
 
     # [122] conv
@@ -153,6 +159,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
 
     # [123] interpolate
     act123 = ng.extern([act120], shape=(1, 16, 24, 1), opcode=0x123, func=interpolate(16, 24, 0, "bilinear"))
+    externs.append((act123, [act120], "act123 = interpolate(16, 24, 0, 'bilinear')(act120)"))
 
 
     # [124] cat
@@ -201,6 +208,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
 
     # [128] interpolate
     act128 = ng.extern([act126], shape=(1, 32, 48, 64), opcode=0x128, func=interpolate(32, 48, 0, "bilinear"))
+    externs.append((act128, [act126], "act128 = interpolate(32, 48, 0, 'bilinear')(act126)"))
 
 
     # [129] conv
@@ -219,6 +227,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
 
     # [130] interpolate
     act130 = ng.extern([act127], shape=(1, 32, 48, 1), opcode=0x130, func=interpolate(32, 48, 0, "bilinear"))
+    externs.append((act130, [act127], "act130 = interpolate(32, 48, 0, 'bilinear')(act127)"))
 
 
     # [131] cat
@@ -267,10 +276,12 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
 
     # [135] interpolate
     act135 = ng.extern([act134], shape=(1, 64, 96, 1), opcode=0x135, func=interpolate(64, 96, 0, "bilinear"))
+    externs.append((act135, [act134], "act135 = interpolate(64, 96, 0, 'bilinear')(act134)"))
 
 
     # [136] interpolate
     act136 = ng.extern([act133], shape=(1, 64, 96, 32), opcode=0x136, func=interpolate(64, 96, 0, "bilinear"))
+    externs.append((act136, [act133], "act136 = interpolate(64, 96, 0, 'bilinear')(act133)"))
 
 
     # [137] cat
@@ -317,4 +328,4 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params,
     act140 = ng.conv2d(act139, weight140, strides=(1, 1, 1, 1), bias=bias140, rshift_out=rshift140, act_func=sigmoid, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
-    return act140
+    return (act140,), externs

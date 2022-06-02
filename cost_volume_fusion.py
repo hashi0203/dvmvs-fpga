@@ -127,7 +127,12 @@ class fusion():
 
 
 def cost_volume_fusion(frame_number, act78, n_measurement_frames, act79s, K, pose1s, pose2ss, act_dtype=ng.int16):
+
+    externs = []
+
     # [80] conv
     act80 = ng.extern([frame_number, act78, n_measurement_frames, *act79s], shape=(1, 32, 48, 64), dtype=act_dtype, opcode=0x80, func=fusion(11, K, pose1s, pose2ss))
+    externs.append((act80, [act78, *act79s], "act80 = fusion(11, K, pose1s, pose2ss)(frame_number, act78, n_measurement_frames, *act79s)"))
 
-    return act80
+
+    return (act80,), externs

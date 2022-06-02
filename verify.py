@@ -133,7 +133,7 @@ class Verifier():
             ng_inputs["cell_state"] = cell_state_value
 
             input_layer_values = ng_inputs
-            eval_outs = ng.eval(layers + reference_features[::-1] + (cost_volume,) + skips + lstm_states[::-1] + (depth_full,), **ng_inputs)
+            eval_outs = ng.eval(layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full, **ng_inputs)
             output_layer_value = eval_outs[-1]
 
             lstm_state = eval_outs[-2], eval_outs[-3]
@@ -188,7 +188,7 @@ class Verifier():
         ng_inputs["cell_state"] = cell_state_value
 
         input_layer_values = ng_inputs
-        eval_outs = ng.eval(layers + reference_features[::-1] + (cost_volume,) + skips + lstm_states[::-1] + (depth_full,), **ng_inputs)
+        eval_outs = ng.eval(layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full, **ng_inputs)
         output_layer_value = eval_outs[-1]
 
         print_results(eval_outs, idx, verbose)

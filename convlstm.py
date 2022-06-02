@@ -42,6 +42,8 @@ class ln():
 
 def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=ng.int16, mid_dtype=ng.int32):
 
+    externs = []
+
     # [103] cat
     act103 = ng.concat([act100, act101], axis=3)
 
@@ -61,6 +63,7 @@ def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=n
     ii105, ff105, oo105 = [sigmoid(ng.rshift_round(slice105s[i], rshift105)) for i in range(3)]
 
     gg105 = ng.extern([slice105s[3]], opcode=0x105, func=lambda x : celu(12)(ln(12)(x)))
+    externs.append((gg105, [slice105s[3]], "gg105 = celu(12)(ln(12)(slice105s[3]))"))
 
 
     # [106] cell_state
@@ -68,12 +71,14 @@ def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=n
     out_rshift106 = ng.constant([12], dtype=ng.int8)
     sum106 = rshift_round_and_clip(ng.add(ng.multiply(ng.rshift_round(ff105, in_rshift106), act102, dtype=mid_dtype), ng.multiply(ng.rshift_round(ii105, in_rshift106), gg105, dtype=mid_dtype)), out_rshift106, dtype=act_dtype)
     act106 = ng.extern([sum106], opcode=0x106, func=ln(12))
+    externs.append((act106, [sum106], "act106 = ln(12)(sum106)"))
 
 
     # [107] hidden_state
     celu107 = ng.extern([act106], opcode=0x107, func=celu(12))
+    externs.append((celu107, [act106], "celu107 = celu(12)(act106)"))
     rshift107 = ng.constant([13], dtype=ng.int8)
     act107 = rshift_round_and_clip(ng.multiply(celu107, oo105, dtype=mid_dtype), rshift107, dtype=act_dtype)
 
 
-    return act107, act106
+    return (act107, act106), externs
