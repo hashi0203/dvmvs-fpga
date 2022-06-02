@@ -156,4 +156,4 @@ if __name__ == '__main__':
 
 
     simulator = Simulator(project_name, targ, param_data, axi_datawidth, chunk_size, par_ich, par_och, act_dtype)
-    simulator.simulate(flat_input_layers, input_layer_values, output_layer, output_layer_value)
+    simulator.simulate(flat_input_layers, flat_input_layer_values, output_layer, output_layer_value)
