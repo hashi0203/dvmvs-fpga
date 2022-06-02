@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
 
     skip_verify = True
-    input_filename = os.path.join(base_dir, 'params_nngen/input.npz')
+    input_filename = os.path.join(base_dir, 'params_nngen/inputs.npz')
     output_filename = os.path.join(base_dir, 'params_nngen/output.npz')
     if skip_verify:
         print("loading input and output values...")
