@@ -38,35 +38,23 @@ def prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype):
 
 def prepare_nets(reference_image, measurement_features, n_measurement_frames, frame_number, hidden_state, cell_state):
     print("preparing feature extractor...")
-    start_time = time.process_time()
     layers = feature_extractor(reference_image, params)
-    print("\t%f [s]" % (time.process_time() - start_time))
 
     print("preparing feature shrinker...")
-    start_time = time.process_time()
     reference_features = feature_shrinker(*layers, params)
-    print("\t%f [s]" % (time.process_time() - start_time))
 
     print("preparing cost volume fusion...")
-    start_time = time.process_time()
     cost_volume = cost_volume_fusion(frame_number, reference_features[0], n_measurement_frames, measurement_features,
                                      inputs["half_K"], inputs["current_pose"], inputs["measurement_poses"])
-    print("\t%f [s]" % (time.process_time() - start_time))
 
     print("preparing cost volume encoder...")
-    start_time = time.process_time()
     skips = cost_volume_encoder(*reference_features, cost_volume, params)
-    print("\t%f [s]" % (time.process_time() - start_time))
 
     print("preparing LSTM fusion...")
-    start_time = time.process_time()
     lstm_states = LSTMFusion(skips[-1], hidden_state, cell_state, params)
-    print("\t%f [s]" % (time.process_time() - start_time))
 
     print("preparing cost volume decoder...")
-    start_time = time.process_time()
     depth_full = cost_volume_decoder(reference_image, *skips[:-1], lstm_states[0], params)
-    print("\t%f [s]" % (time.process_time() - start_time))
 
     return layers, reference_features, cost_volume, skips, lstm_states, depth_full
 
@@ -85,18 +73,16 @@ if __name__ == '__main__':
     inputs = np.load(os.path.join(base_dir, "params/inputs.npz"))
     outputs = np.load(os.path.join(base_dir, "params/outputs.npz"))
 
+    start_time = time.process_time()
     input_layers = prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype)
     nets = prepare_nets(*input_layers)
     output_layer = nets[-1]
+    print("\t%f [s]" % (time.process_time() - start_time))
 
 
-    skip_verify = False
-    skip_to_ipxact = False
-    skip_export = False
-
-
-    input_filename = os.path.join(base_dir, 'params_nngen/input')
-    output_filename = os.path.join(base_dir, 'params_nngen/output')
+    skip_verify = True
+    input_filename = os.path.join(base_dir, 'params_nngen/input.npz')
+    output_filename = os.path.join(base_dir, 'params_nngen/output.npz')
     if skip_verify:
         print("loading input and output values...")
         input_file = np.load(input_filename)
@@ -114,6 +100,7 @@ if __name__ == '__main__':
         np.savez_compressed(output_filename, output=output_layer_value)
 
 
+    skip_to_ipxact = False
     axi_datawidth = 32
     if skip_to_ipxact:
         print("skiping to_ipxact...")
@@ -128,7 +115,8 @@ if __name__ == '__main__':
         print('# IP-XACT was generated. Check the current directory.')
 
 
-    param_filename = os.path.join(base_dir, 'params_nngen/params')
+    skip_export = True
+    param_filename = os.path.join(base_dir, 'params_nngen/params.npz')
     chunk_size = 64
     if skip_export:
         print("loading params...")

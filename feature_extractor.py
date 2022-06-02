@@ -21,7 +21,11 @@ def feature_extractor(act0, params,
 
     # [2] conv
     weight2 = ng.variable(dtype=weight_dtype, shape=(32, 3, 3, 32), name="layer1.3.weight")
-    weight2.set_value(np.array([[[[params["layer1.3.weight"][i][j][k][0] if i == l else 0 for l in range(32)] for k in range(3)] for j in range(3)] for i in range(32)]))
+    weight2_value_org = params["layer1.3.weight"]
+    weight2_value = np.zeros((32, 3, 3, 32))
+    for i, j, k in np.ndindex((32, 3, 3)):
+        weight2_value[i][j][k][i] = weight2_value_org[i][j][k][0]
+    weight2.set_value(weight2_value)
 
     bias2 = ng.variable(dtype=bias_dtype, shape=(32,), name="layer1.3.bias")
     bias2.set_value(np.round(params["layer1.3.bias"] / (float) (1 << 9)).astype(params["layer1.3.bias"].dtype))
@@ -63,7 +67,11 @@ def feature_extractor(act0, params,
 
     # [5] conv
     weight5 = ng.variable(dtype=weight_dtype, shape=(48, 3, 3, 48), name="layer2.0.0.layers.3.weight")
-    weight5.set_value(np.array([[[[params["layer2.0.0.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(48)] for k in range(3)] for j in range(3)] for i in range(48)]))
+    weight5_value_org = params["layer2.0.0.layers.3.weight"]
+    weight5_value = np.zeros((48, 3, 3, 48))
+    for i, j, k in np.ndindex((48, 3, 3)):
+        weight5_value[i][j][k][i] = weight5_value_org[i][j][k][0]
+    weight5.set_value(weight5_value)
 
     bias5 = ng.variable(dtype=bias_dtype, shape=(48,), name="layer2.0.0.layers.3.bias")
     bias5.set_value(np.round(params["layer2.0.0.layers.3.bias"] / (float) (1 << 5)).astype(params["layer2.0.0.layers.3.bias"].dtype))
@@ -105,7 +113,11 @@ def feature_extractor(act0, params,
 
     # [8] conv
     weight8 = ng.variable(dtype=weight_dtype, shape=(72, 3, 3, 72), name="layer2.0.1.layers.3.weight")
-    weight8.set_value(np.array([[[[params["layer2.0.1.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(72)] for k in range(3)] for j in range(3)] for i in range(72)]))
+    weight8_value_org = params["layer2.0.1.layers.3.weight"]
+    weight8_value = np.zeros((72, 3, 3, 72))
+    for i, j, k in np.ndindex((72, 3, 3)):
+        weight8_value[i][j][k][i] = weight8_value_org[i][j][k][0]
+    weight8.set_value(weight8_value)
 
     bias8 = ng.variable(dtype=bias_dtype, shape=(72,), name="layer2.0.1.layers.3.bias")
     bias8.set_value(np.round(params["layer2.0.1.layers.3.bias"] / (float) (1 << 6)).astype(params["layer2.0.1.layers.3.bias"].dtype))
@@ -151,7 +163,11 @@ def feature_extractor(act0, params,
 
     # [12] conv
     weight12 = ng.variable(dtype=weight_dtype, shape=(72, 3, 3, 72), name="layer2.0.2.layers.3.weight")
-    weight12.set_value(np.array([[[[params["layer2.0.2.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(72)] for k in range(3)] for j in range(3)] for i in range(72)]))
+    weight12_value_org = params["layer2.0.2.layers.3.weight"]
+    weight12_value = np.zeros((72, 3, 3, 72))
+    for i, j, k in np.ndindex((72, 3, 3)):
+        weight12_value[i][j][k][i] = weight12_value_org[i][j][k][0]
+    weight12.set_value(weight12_value)
 
     bias12 = ng.variable(dtype=bias_dtype, shape=(72,), name="layer2.0.2.layers.3.bias")
     bias12.set_value(np.round(params["layer2.0.2.layers.3.bias"] / (float) (1 << 7)).astype(params["layer2.0.2.layers.3.bias"].dtype))
@@ -197,7 +213,11 @@ def feature_extractor(act0, params,
 
     # [16] conv
     weight16 = ng.variable(dtype=weight_dtype, shape=(72, 5, 5, 72), name="layer3.0.0.layers.3.weight")
-    weight16.set_value(np.array([[[[params["layer3.0.0.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(72)] for k in range(5)] for j in range(5)] for i in range(72)]))
+    weight16_value_org = params["layer3.0.0.layers.3.weight"]
+    weight16_value = np.zeros((72, 5, 5, 72))
+    for i, j, k in np.ndindex((72, 5, 5)):
+        weight16_value[i][j][k][i] = weight16_value_org[i][j][k][0]
+    weight16.set_value(weight16_value)
 
     bias16 = ng.variable(dtype=bias_dtype, shape=(72,), name="layer3.0.0.layers.3.bias")
     bias16.set_value(np.round(params["layer3.0.0.layers.3.bias"] / (float) (1 << 5)).astype(params["layer3.0.0.layers.3.bias"].dtype))
@@ -239,7 +259,11 @@ def feature_extractor(act0, params,
 
     # [19] conv
     weight19 = ng.variable(dtype=weight_dtype, shape=(120, 5, 5, 120), name="layer3.0.1.layers.3.weight")
-    weight19.set_value(np.array([[[[params["layer3.0.1.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(120)] for k in range(5)] for j in range(5)] for i in range(120)]))
+    weight19_value_org = params["layer3.0.1.layers.3.weight"]
+    weight19_value = np.zeros((120, 5, 5, 120))
+    for i, j, k in np.ndindex((120, 5, 5)):
+        weight19_value[i][j][k][i] = weight19_value_org[i][j][k][0]
+    weight19.set_value(weight19_value)
 
     bias19 = ng.variable(dtype=bias_dtype, shape=(120,), name="layer3.0.1.layers.3.bias")
     bias19.set_value(np.round(params["layer3.0.1.layers.3.bias"] / (float) (1 << 5)).astype(params["layer3.0.1.layers.3.bias"].dtype))
@@ -286,7 +310,11 @@ def feature_extractor(act0, params,
 
     # [23] conv
     weight23 = ng.variable(dtype=weight_dtype, shape=(120, 5, 5, 120), name="layer3.0.2.layers.3.weight")
-    weight23.set_value(np.array([[[[params["layer3.0.2.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(120)] for k in range(5)] for j in range(5)] for i in range(120)]))
+    weight23_value_org = params["layer3.0.2.layers.3.weight"]
+    weight23_value = np.zeros((120, 5, 5, 120))
+    for i, j, k in np.ndindex((120, 5, 5)):
+        weight23_value[i][j][k][i] = weight23_value_org[i][j][k][0]
+    weight23.set_value(weight23_value)
 
     bias23 = ng.variable(dtype=bias_dtype, shape=(120,), name="layer3.0.2.layers.3.bias")
     bias23.set_value(np.round(params["layer3.0.2.layers.3.bias"] / (float) (1 << 6)).astype(params["layer3.0.2.layers.3.bias"].dtype))
@@ -334,7 +362,11 @@ def feature_extractor(act0, params,
 
     # [27] conv
     weight27 = ng.variable(dtype=weight_dtype, shape=(240, 5, 5, 240), name="layer4.0.0.layers.3.weight")
-    weight27.set_value(np.array([[[[params["layer4.0.0.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(240)] for k in range(5)] for j in range(5)] for i in range(240)]))
+    weight27_value_org = params["layer4.0.0.layers.3.weight"]
+    weight27_value = np.zeros((240, 5, 5, 240))
+    for i, j, k in np.ndindex((240, 5, 5)):
+        weight27_value[i][j][k][i] = weight27_value_org[i][j][k][0]
+    weight27.set_value(weight27_value)
 
     bias27 = ng.variable(dtype=bias_dtype, shape=(240,), name="layer4.0.0.layers.3.bias")
     bias27.set_value(np.round(params["layer4.0.0.layers.3.bias"] / (float) (1 << 4)).astype(params["layer4.0.0.layers.3.bias"].dtype))
@@ -376,7 +408,11 @@ def feature_extractor(act0, params,
 
     # [30] conv
     weight30 = ng.variable(dtype=weight_dtype, shape=(480, 5, 5, 480), name="layer4.0.1.layers.3.weight")
-    weight30.set_value(np.array([[[[params["layer4.0.1.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(480)] for k in range(5)] for j in range(5)] for i in range(480)]))
+    weight30_value_org = params["layer4.0.1.layers.3.weight"]
+    weight30_value = np.zeros((480, 5, 5, 480))
+    for i, j, k in np.ndindex((480, 5, 5)):
+        weight30_value[i][j][k][i] = weight30_value_org[i][j][k][0]
+    weight30.set_value(weight30_value)
 
     bias30 = ng.variable(dtype=bias_dtype, shape=(480,), name="layer4.0.1.layers.3.bias")
     bias30.set_value(np.round(params["layer4.0.1.layers.3.bias"] / (float) (1 << 6)).astype(params["layer4.0.1.layers.3.bias"].dtype))
@@ -424,7 +460,11 @@ def feature_extractor(act0, params,
 
     # [34] conv
     weight34 = ng.variable(dtype=weight_dtype, shape=(480, 5, 5, 480), name="layer4.0.2.layers.3.weight")
-    weight34.set_value(np.array([[[[params["layer4.0.2.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(480)] for k in range(5)] for j in range(5)] for i in range(480)]))
+    weight34_value_org = params["layer4.0.2.layers.3.weight"]
+    weight34_value = np.zeros((480, 5, 5, 480))
+    for i, j, k in np.ndindex((480, 5, 5)):
+        weight34_value[i][j][k][i] = weight34_value_org[i][j][k][0]
+    weight34.set_value(weight34_value)
 
     bias34 = ng.variable(dtype=bias_dtype, shape=(480,), name="layer4.0.2.layers.3.bias")
     bias34.set_value(np.round(params["layer4.0.2.layers.3.bias"] / (float) (1 << 6)).astype(params["layer4.0.2.layers.3.bias"].dtype))
@@ -472,7 +512,11 @@ def feature_extractor(act0, params,
 
     # [38] conv
     weight38 = ng.variable(dtype=weight_dtype, shape=(480, 3, 3, 480), name="layer4.1.0.layers.3.weight")
-    weight38.set_value(np.array([[[[params["layer4.1.0.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(480)] for k in range(3)] for j in range(3)] for i in range(480)]))
+    weight38_value_org = params["layer4.1.0.layers.3.weight"]
+    weight38_value = np.zeros((480, 3, 3, 480))
+    for i, j, k in np.ndindex((480, 3, 3)):
+        weight38_value[i][j][k][i] = weight38_value_org[i][j][k][0]
+    weight38.set_value(weight38_value)
 
     bias38 = ng.variable(dtype=bias_dtype, shape=(480,), name="layer4.1.0.layers.3.bias")
     bias38.set_value(np.round(params["layer4.1.0.layers.3.bias"] / (float) (1 << 5)).astype(params["layer4.1.0.layers.3.bias"].dtype))
@@ -514,7 +558,11 @@ def feature_extractor(act0, params,
 
     # [41] conv
     weight41 = ng.variable(dtype=weight_dtype, shape=(576, 3, 3, 576), name="layer4.1.1.layers.3.weight")
-    weight41.set_value(np.array([[[[params["layer4.1.1.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(576)] for k in range(3)] for j in range(3)] for i in range(576)]))
+    weight41_value_org = params["layer4.1.1.layers.3.weight"]
+    weight41_value = np.zeros((576, 3, 3, 576))
+    for i, j, k in np.ndindex((576, 3, 3)):
+        weight41_value[i][j][k][i] = weight41_value_org[i][j][k][0]
+    weight41.set_value(weight41_value)
 
     bias41 = ng.variable(dtype=bias_dtype, shape=(576,), name="layer4.1.1.layers.3.bias")
     bias41.set_value(np.round(params["layer4.1.1.layers.3.bias"] / (float) (1 << 7)).astype(params["layer4.1.1.layers.3.bias"].dtype))
@@ -562,7 +610,11 @@ def feature_extractor(act0, params,
 
     # [45] conv
     weight45 = ng.variable(dtype=weight_dtype, shape=(576, 5, 5, 576), name="layer5.0.0.layers.3.weight")
-    weight45.set_value(np.array([[[[params["layer5.0.0.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(576)] for k in range(5)] for j in range(5)] for i in range(576)]))
+    weight45_value_org = params["layer5.0.0.layers.3.weight"]
+    weight45_value = np.zeros((576, 5, 5, 576))
+    for i, j, k in np.ndindex((576, 5, 5)):
+        weight45_value[i][j][k][i] = weight45_value_org[i][j][k][0]
+    weight45.set_value(weight45_value)
 
     bias45 = ng.variable(dtype=bias_dtype, shape=(576,), name="layer5.0.0.layers.3.bias")
     bias45.set_value(np.round(params["layer5.0.0.layers.3.bias"] / (float) (1 << 4)).astype(params["layer5.0.0.layers.3.bias"].dtype))
@@ -604,7 +656,11 @@ def feature_extractor(act0, params,
 
     # [48] conv
     weight48 = ng.variable(dtype=weight_dtype, shape=(1152, 5, 5, 1152), name="layer5.0.1.layers.3.weight")
-    weight48.set_value(np.array([[[[params["layer5.0.1.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(1152)] for k in range(5)] for j in range(5)] for i in range(1152)]))
+    weight48_value_org = params["layer5.0.1.layers.3.weight"]
+    weight48_value = np.zeros((1152, 5, 5, 1152))
+    for i, j, k in np.ndindex((1152, 5, 5)):
+        weight48_value[i][j][k][i] = weight48_value_org[i][j][k][0]
+    weight48.set_value(weight48_value)
 
     bias48 = ng.variable(dtype=bias_dtype, shape=(1152,), name="layer5.0.1.layers.3.bias")
     bias48.set_value(np.round(params["layer5.0.1.layers.3.bias"] / (float) (1 << 7)).astype(params["layer5.0.1.layers.3.bias"].dtype))
@@ -652,7 +708,11 @@ def feature_extractor(act0, params,
 
     # [52] conv
     weight52 = ng.variable(dtype=weight_dtype, shape=(1152, 5, 5, 1152), name="layer5.0.2.layers.3.weight")
-    weight52.set_value(np.array([[[[params["layer5.0.2.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(1152)] for k in range(5)] for j in range(5)] for i in range(1152)]))
+    weight52_value_org = params["layer5.0.2.layers.3.weight"]
+    weight52_value = np.zeros((1152, 5, 5, 1152))
+    for i, j, k in np.ndindex((1152, 5, 5)):
+        weight52_value[i][j][k][i] = weight52_value_org[i][j][k][0]
+    weight52.set_value(weight52_value)
 
     bias52 = ng.variable(dtype=bias_dtype, shape=(1152,), name="layer5.0.2.layers.3.bias")
     bias52.set_value(np.round(params["layer5.0.2.layers.3.bias"] / (float) (1 << 7)).astype(params["layer5.0.2.layers.3.bias"].dtype))
@@ -700,7 +760,11 @@ def feature_extractor(act0, params,
 
     # [56] conv
     weight56 = ng.variable(dtype=weight_dtype, shape=(1152, 5, 5, 1152), name="layer5.0.3.layers.3.weight")
-    weight56.set_value(np.array([[[[params["layer5.0.3.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(1152)] for k in range(5)] for j in range(5)] for i in range(1152)]))
+    weight56_value_org = params["layer5.0.3.layers.3.weight"]
+    weight56_value = np.zeros((1152, 5, 5, 1152))
+    for i, j, k in np.ndindex((1152, 5, 5)):
+        weight56_value[i][j][k][i] = weight56_value_org[i][j][k][0]
+    weight56.set_value(weight56_value)
 
     bias56 = ng.variable(dtype=bias_dtype, shape=(1152,), name="layer5.0.3.layers.3.bias")
     bias56.set_value(np.round(params["layer5.0.3.layers.3.bias"] / (float) (1 << 6)).astype(params["layer5.0.3.layers.3.bias"].dtype))
@@ -748,7 +812,11 @@ def feature_extractor(act0, params,
 
     # [60] conv
     weight60 = ng.variable(dtype=weight_dtype, shape=(1152, 3, 3, 1152), name="layer5.1.0.layers.3.weight")
-    weight60.set_value(np.array([[[[params["layer5.1.0.layers.3.weight"][i][j][k][0] if i == l else 0 for l in range(1152)] for k in range(3)] for j in range(3)] for i in range(1152)]))
+    weight60_value_org = params["layer5.1.0.layers.3.weight"]
+    weight60_value = np.zeros((1152, 3, 3, 1152))
+    for i, j, k in np.ndindex((1152, 3, 3)):
+        weight60_value[i][j][k][i] = weight60_value_org[i][j][k][0]
+    weight60.set_value(weight60_value)
 
     bias60 = ng.variable(dtype=bias_dtype, shape=(1152,), name="layer5.1.0.layers.3.bias")
     bias60.set_value(np.round(params["layer5.1.0.layers.3.bias"] / (float) (1 << 4)).astype(params["layer5.1.0.layers.3.bias"].dtype))
