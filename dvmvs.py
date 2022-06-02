@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
+from sys import flags
 
 import time
 import os
@@ -7,6 +8,7 @@ from xml.sax.handler import feature_external_ges
 
 import numpy as np
 import nngen as ng
+from torch import flatten
 
 from feature_extractor import feature_extractor
 from feature_shrinker import feature_shrinker
@@ -67,6 +69,8 @@ if __name__ == '__main__':
     batchsize = 1
     max_n_measurement_frames = 2
     project_name = "dvmvs"
+    par_ich = 1
+    par_och = 1
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     params = np.load(os.path.join(base_dir, "params/params.npz"))
@@ -80,7 +84,7 @@ if __name__ == '__main__':
     print("\t%f [s]" % (time.process_time() - start_time))
 
 
-    skip_verify = False
+    skip_verify = True
     input_filename = os.path.join(base_dir, 'params_nngen/input.npz')
     output_filename = os.path.join(base_dir, 'params_nngen/output.npz')
     if skip_verify:
@@ -115,9 +119,9 @@ if __name__ == '__main__':
         print('# IP-XACT was generated. Check the current directory.')
 
 
-    skip_export = False
+    skip_export = True
     param_filename = os.path.join(base_dir, 'params_nngen/params.npz')
-    chunk_size = 64
+    chunk_size = 64 # should not be changed
     if skip_export:
         print("loading params...")
         param_file = np.load(param_filename)
@@ -134,5 +138,22 @@ if __name__ == '__main__':
         print("\t%f [s]" % (time.process_time() - start_time))
 
 
-    # simulator = Simulator(project_name, targ, param_data, axi_datawidth, chunk_size, act_dtype)
-    # simulator.simulate(input_layers, input_layer_values, output_layer, output_layer_value)
+    flat_input_layers = []
+    for l in input_layers:
+        if isinstance(l, list):
+            flat_input_layers.extend(l)
+        else:
+            flat_input_layers.append(l)
+
+    measurement_name = ["measurement_feature%d" % m for m in range(max_n_measurement_frames)]
+    input_names = ["reference_image"] + measurement_name + ["n_measurement_frames", "frame_number", "hidden_state", "cell_state"]
+    flat_input_layer_values = []
+    for name in input_names:
+        if isinstance(input_layer_values[name], list):
+            flat_input_layer_values.extend(input_layer_values[name])
+        else:
+            flat_input_layer_values.append(input_layer_values[name])
+
+
+    simulator = Simulator(project_name, targ, param_data, axi_datawidth, chunk_size, par_ich, par_och, act_dtype)
+    simulator.simulate(flat_input_layers, input_layer_values, output_layer, output_layer_value)
