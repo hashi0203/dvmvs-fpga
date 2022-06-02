@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 from __future__ import print_function
-from sys import flags
 
 import time
 import os
@@ -8,7 +7,6 @@ from xml.sax.handler import feature_external_ges
 
 import numpy as np
 import nngen as ng
-from torch import flatten
 
 from feature_extractor import feature_extractor
 from feature_shrinker import feature_shrinker
@@ -113,7 +111,7 @@ if __name__ == '__main__':
         print("converting NNgen dataflow to hardware description...")
         # to IP-XACT (the method returns Veriloggen object, as well as to_veriloggen)
         start_time = time.process_time()
-        targ = ng.to_ipxact([output_layer], project_name, silent=True,
+        targ = ng.to_ipxact([output_layer], project_name, silent=False,
                             config={'maxi_datawidth': axi_datawidth})
         print("\t%f [s]" % (time.process_time() - start_time))
         print('# IP-XACT was generated. Check the current directory.')
