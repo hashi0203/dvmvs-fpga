@@ -80,7 +80,7 @@ if __name__ == '__main__':
     print("\t%f [s]" % (time.process_time() - start_time))
 
 
-    skip_verify = True
+    skip_verify = False
     input_filename = os.path.join(base_dir, 'params_nngen/input.npz')
     output_filename = os.path.join(base_dir, 'params_nngen/output.npz')
     if skip_verify:
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 
 
     skip_to_ipxact = False
-    axi_datawidth = 32
+    axi_datawidth = 128
     if skip_to_ipxact:
         print("skiping to_ipxact...")
     else:
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         print('# IP-XACT was generated. Check the current directory.')
 
 
-    skip_export = True
+    skip_export = False
     param_filename = os.path.join(base_dir, 'params_nngen/params.npz')
     chunk_size = 64
     if skip_export:
