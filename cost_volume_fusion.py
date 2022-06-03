@@ -126,7 +126,7 @@ class fusion():
         return round_and_clip((fused_cost_volume / n_measurement_frames) / (1 << rshift), image1.dtype)
 
 
-def cost_volume_fusion(frame_number, act78, n_measurement_frames, act79s, K, pose1s, pose2ss, act_dtype=ng.int16):
+def cost_volume_fusion(frame_number, act78, n_measurement_frames, act79s, K, pose1s, pose2ss, act_dtype):
 
     externs = []
 

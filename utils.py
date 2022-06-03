@@ -4,12 +4,12 @@ import torch
 import kornia
 
 class sigmoid(ng.sigmoid):
-    def __init__(self, features):
-        ng.sigmoid.__init__(self, features, lut_addrwidth=9, lut_clip=8.0, range_rate=0.5, dtype=ng.int16)
+    def __init__(self, features, par=1):
+        ng.sigmoid.__init__(self, features, lut_addrwidth=9, lut_clip=8.0, range_rate=0.5, dtype=ng.int16, par=par)
 
 
-def rshift_round_and_clip(act, rshift, dtype):
-    return ng.clip(ng.rshift_round(act, rshift), asymmetric_clip=True, dtype=dtype)
+def rshift_round_and_clip(act, rshift, par, dtype):
+    return ng.clip(ng.rshift_round(act, rshift, par=par), asymmetric_clip=True, par=par, dtype=dtype)
 
 
 def round_and_clip(input, dtype):

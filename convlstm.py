@@ -40,7 +40,8 @@ class ln():
         return round_and_clip((x - e) / np.sqrt(v + eps) * (1 << self.lshift), x.dtype)
 
 
-def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=ng.int16, mid_dtype=ng.int32):
+def LSTMFusion(act100, act101, act102, params, par_ich, par_och, par,
+               weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
 
     externs = []
 
@@ -53,14 +54,14 @@ def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=n
     weight104.set_value(params["lstm_cell.conv.weight"])
 
     rshift104 = ng.constant([11], dtype=ng.int8)
-    act104 = ng.conv2d(act103, weight104, strides=(1, 1, 1, 1), rshift_out=rshift104, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act104 = ng.conv2d(act103, weight104, strides=(1, 1, 1, 1), rshift_out=rshift104, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [105] sig_ln_celu
     slice105s = [ng.slice_(act104, (0, 0, 0, i * 512), (1, 2, 3, (i+1) * 512), (1, 1, 1, 1)) for i in range(4)]
 
     rshift105 = ng.constant([4], dtype=ng.int8)
-    ii105, ff105, oo105 = [sigmoid(ng.rshift_round(slice105s[i], rshift105)) for i in range(3)]
+    ii105, ff105, oo105 = [sigmoid(ng.rshift_round(slice105s[i], rshift105, par=par), par=par) for i in range(3)]
 
     gg105 = ng.extern([slice105s[3]], opcode=0x105, func=lambda x : celu(12)(ln(12)(x)))
     externs.append((gg105, [slice105s[3]], "gg105 = celu(12)(ln(12)(slice105s[3]))"))
@@ -69,7 +70,7 @@ def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=n
     # [106] cell_state
     in_rshift106 = ng.constant([2], dtype=ng.int8)
     out_rshift106 = ng.constant([12], dtype=ng.int8)
-    sum106 = rshift_round_and_clip(ng.add(ng.multiply(ng.rshift_round(ff105, in_rshift106), act102, dtype=mid_dtype), ng.multiply(ng.rshift_round(ii105, in_rshift106), gg105, dtype=mid_dtype)), out_rshift106, dtype=act_dtype)
+    sum106 = rshift_round_and_clip(ng.add(ng.multiply(ng.rshift_round(ff105, in_rshift106, par=par), act102, par=par, dtype=mid_dtype), ng.multiply(ng.rshift_round(ii105, in_rshift106, par=par), gg105, par=par, dtype=mid_dtype), par=par), out_rshift106, par=par, dtype=act_dtype)
     act106 = ng.extern([sum106], opcode=0x106, func=ln(12))
     externs.append((act106, [sum106], "act106 = ln(12)(sum106)"))
 
@@ -78,7 +79,7 @@ def LSTMFusion(act100, act101, act102, params, weight_dtype=ng.int8, act_dtype=n
     celu107 = ng.extern([act106], opcode=0x107, func=celu(12))
     externs.append((celu107, [act106], "celu107 = celu(12)(act106)"))
     rshift107 = ng.constant([13], dtype=ng.int8)
-    act107 = rshift_round_and_clip(ng.multiply(celu107, oo105, dtype=mid_dtype), rshift107, dtype=act_dtype)
+    act107 = rshift_round_and_clip(ng.multiply(celu107, oo105, par=par, dtype=mid_dtype), rshift107, par=par, dtype=act_dtype)
 
 
     return (act107, act106), externs

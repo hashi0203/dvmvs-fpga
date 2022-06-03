@@ -36,45 +36,54 @@ def prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype):
     return reference_image, frame_number, n_measurement_frames, measurement_features, hidden_state, cell_state
 
 
-def prepare_nets(reference_image, frame_number, n_measurement_frames, measurement_features, hidden_state, cell_state):
+def prepare_nets(reference_image, frame_number, n_measurement_frames, measurement_features, hidden_state, cell_state,
+                 pars, dtypes):
+
     externs = []
 
     print("preparing feature extractor...")
-    layers = feature_extractor(reference_image, params)
+    layers = feature_extractor(reference_image, params, **pars, **dtypes)
 
     print("preparing feature shrinker...")
-    reference_features, extern = feature_shrinker(*layers, params)
+    reference_features, extern = feature_shrinker(*layers, params, **pars, **dtypes)
     externs.extend(extern)
 
     print("preparing cost volume fusion...")
     cost_volume, extern = cost_volume_fusion(frame_number, reference_features[0], n_measurement_frames, measurement_features,
-                                     inputs["half_K"], inputs["current_pose"], inputs["measurement_poses"])
+                                             inputs["half_K"], inputs["current_pose"], inputs["measurement_poses"], dtypes["act_dtype"])
     externs.extend(extern)
 
     print("preparing cost volume encoder...")
-    skips = cost_volume_encoder(*reference_features, *cost_volume, params)
+    skips = cost_volume_encoder(*reference_features, *cost_volume, params, **pars, **dtypes)
 
     print("preparing LSTM fusion...")
-    lstm_states, extern = LSTMFusion(skips[-1], hidden_state, cell_state, params)
+    lstm_states, extern = LSTMFusion(skips[-1], hidden_state, cell_state, params, **pars, **dtypes)
     externs.extend(extern)
 
     print("preparing cost volume decoder...")
-    depth_full, extern = cost_volume_decoder(reference_image, *skips[:-1], lstm_states[0], params)
+    depth_full, extern = cost_volume_decoder(reference_image, *skips[:-1], lstm_states[0], params, **pars, **dtypes)
     externs.extend(extern)
 
     return (layers, reference_features, cost_volume, skips, lstm_states, depth_full), externs
 
 
 if __name__ == '__main__':
-    # weight_dtype = ng.int8
-    # bias_dtype = ng.int32
-    # scale_dtype = ng.int8
-    act_dtype = ng.int16
     batchsize = 1
     max_n_measurement_frames = 2
     project_name = "dvmvs"
-    par_ich = 1
-    par_och = 1
+
+    par_ich = 8
+    par_och = 32
+    par = par_och
+    pars = {"par_ich": par_ich, "par_och": par_och, "par": par}
+
+    weight_dtype = ng.int8
+    bias_dtype = ng.int32
+    scale_dtype = ng.int8
+    act_dtype = ng.int16
+    mid_dtype = ng.int32
+    dtypes = {"weight_dtype": weight_dtype, "bias_dtype": bias_dtype,
+              "scale_dtype": scale_dtype, "act_dtype": act_dtype, "mid_dtype": mid_dtype}
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     params = np.load(os.path.join(base_dir, "params/params.npz"))
@@ -83,7 +92,7 @@ if __name__ == '__main__':
 
     start_time = time.process_time()
     input_layers = prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype)
-    nets, externs = prepare_nets(*input_layers)
+    nets, externs = prepare_nets(*input_layers, pars, dtypes)
     output_layer = nets[-1][0]
     print("\t%f [s]" % (time.process_time() - start_time))
 

@@ -1,12 +1,12 @@
 import numpy as np
 import nngen as ng
 
-def cost_volume_encoder(act78, act74, act70, act66, act80, params,
-                        weight_dtype=ng.int8, bias_dtype=ng.int32, scale_dtype=ng.int8, act_dtype=ng.int16, mid_dtype=ng.int32):
+def cost_volume_encoder(act78, act74, act70, act66, act80, params, par_ich, par_och, par,
+                        weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
 
     # [81] cat
     rshift81 = ng.constant([2], dtype=ng.int8)
-    act81 = ng.concat([ng.rshift_round(act78, rshift81), act80], axis=3)
+    act81 = ng.concat([ng.rshift_round(act78, rshift81, par=par), act80], axis=3)
 
 
     # [82] conv
@@ -20,7 +20,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale82.set_value(params["aggregator0.0.scale"])
 
     rshift82 = ng.constant([13], dtype=ng.int8)
-    act82 = ng.conv2d(act81, weight82, strides=(1, 1, 1, 1), bias=bias82, scale=scale82, rshift_out=rshift82, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act82 = ng.conv2d(act81, weight82, strides=(1, 1, 1, 1), bias=bias82, scale=scale82, rshift_out=rshift82, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [83] conv
@@ -34,7 +34,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale83.set_value(params["encoder_block0.down_convolution.down_conv.0.scale"])
 
     rshift83 = ng.constant([14], dtype=ng.int8)
-    act83 = ng.conv2d(act82, weight83, strides=(1, 2, 2, 1), bias=bias83, scale=scale83, rshift_out=rshift83, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act83 = ng.conv2d(act82, weight83, strides=(1, 2, 2, 1), bias=bias83, scale=scale83, rshift_out=rshift83, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [84] conv
@@ -48,7 +48,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale84.set_value(params["encoder_block0.standard_convolution.conv1.0.scale"])
 
     rshift84 = ng.constant([15], dtype=ng.int8)
-    act84 = ng.conv2d(act83, weight84, strides=(1, 1, 1, 1), bias=bias84, scale=scale84, rshift_out=rshift84, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act84 = ng.conv2d(act83, weight84, strides=(1, 1, 1, 1), bias=bias84, scale=scale84, rshift_out=rshift84, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [85] conv
@@ -62,12 +62,12 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale85.set_value(params["encoder_block0.standard_convolution.conv2.0.scale"])
 
     rshift85 = ng.constant([15], dtype=ng.int8)
-    act85 = ng.conv2d(act84, weight85, strides=(1, 1, 1, 1), bias=bias85, scale=scale85, rshift_out=rshift85, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act85 = ng.conv2d(act84, weight85, strides=(1, 1, 1, 1), bias=bias85, scale=scale85, rshift_out=rshift85, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [86] cat
     rshift86 = ng.constant([3], dtype=ng.int8)
-    act86 = ng.concat([act74, ng.rshift_round(act85, rshift86)], axis=3)
+    act86 = ng.concat([act74, ng.rshift_round(act85, rshift86, par=par)], axis=3)
 
 
     # [87] conv
@@ -81,7 +81,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale87.set_value(params["aggregator1.0.scale"])
 
     rshift87 = ng.constant([13], dtype=ng.int8)
-    act87 = ng.conv2d(act86, weight87, strides=(1, 1, 1, 1), bias=bias87, scale=scale87, rshift_out=rshift87, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act87 = ng.conv2d(act86, weight87, strides=(1, 1, 1, 1), bias=bias87, scale=scale87, rshift_out=rshift87, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [88] conv
@@ -95,7 +95,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale88.set_value(params["encoder_block1.down_convolution.down_conv.0.scale"])
 
     rshift88 = ng.constant([13], dtype=ng.int8)
-    act88 = ng.conv2d(act87, weight88, strides=(1, 2, 2, 1), bias=bias88, scale=scale88, rshift_out=rshift88, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act88 = ng.conv2d(act87, weight88, strides=(1, 2, 2, 1), bias=bias88, scale=scale88, rshift_out=rshift88, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [89] conv
@@ -109,7 +109,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale89.set_value(params["encoder_block1.standard_convolution.conv1.0.scale"])
 
     rshift89 = ng.constant([14], dtype=ng.int8)
-    act89 = ng.conv2d(act88, weight89, strides=(1, 1, 1, 1), bias=bias89, scale=scale89, rshift_out=rshift89, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act89 = ng.conv2d(act88, weight89, strides=(1, 1, 1, 1), bias=bias89, scale=scale89, rshift_out=rshift89, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [90] conv
@@ -123,12 +123,12 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale90.set_value(params["encoder_block1.standard_convolution.conv2.0.scale"])
 
     rshift90 = ng.constant([15], dtype=ng.int8)
-    act90 = ng.conv2d(act89, weight90, strides=(1, 1, 1, 1), bias=bias90, scale=scale90, rshift_out=rshift90, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act90 = ng.conv2d(act89, weight90, strides=(1, 1, 1, 1), bias=bias90, scale=scale90, rshift_out=rshift90, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [91] cat
     rshift91 = ng.constant([1], dtype=ng.int8)
-    act91 = ng.concat([act70, ng.rshift_round(act90, rshift91)], axis=3)
+    act91 = ng.concat([act70, ng.rshift_round(act90, rshift91, par=par)], axis=3)
 
 
     # [92] conv
@@ -142,7 +142,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale92.set_value(params["aggregator2.0.scale"])
 
     rshift92 = ng.constant([14], dtype=ng.int8)
-    act92 = ng.conv2d(act91, weight92, strides=(1, 1, 1, 1), bias=bias92, scale=scale92, rshift_out=rshift92, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act92 = ng.conv2d(act91, weight92, strides=(1, 1, 1, 1), bias=bias92, scale=scale92, rshift_out=rshift92, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [93] conv
@@ -156,7 +156,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale93.set_value(params["encoder_block2.down_convolution.down_conv.0.scale"])
 
     rshift93 = ng.constant([15], dtype=ng.int8)
-    act93 = ng.conv2d(act92, weight93, strides=(1, 2, 2, 1), bias=bias93, scale=scale93, rshift_out=rshift93, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act93 = ng.conv2d(act92, weight93, strides=(1, 2, 2, 1), bias=bias93, scale=scale93, rshift_out=rshift93, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [94] conv
@@ -170,7 +170,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale94.set_value(params["encoder_block2.standard_convolution.conv1.0.scale"])
 
     rshift94 = ng.constant([14], dtype=ng.int8)
-    act94 = ng.conv2d(act93, weight94, strides=(1, 1, 1, 1), bias=bias94, scale=scale94, rshift_out=rshift94, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act94 = ng.conv2d(act93, weight94, strides=(1, 1, 1, 1), bias=bias94, scale=scale94, rshift_out=rshift94, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [95] conv
@@ -184,12 +184,12 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale95.set_value(params["encoder_block2.standard_convolution.conv2.0.scale"])
 
     rshift95 = ng.constant([15], dtype=ng.int8)
-    act95 = ng.conv2d(act94, weight95, strides=(1, 1, 1, 1), bias=bias95, scale=scale95, rshift_out=rshift95, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act95 = ng.conv2d(act94, weight95, strides=(1, 1, 1, 1), bias=bias95, scale=scale95, rshift_out=rshift95, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [96] cat
     rshift96 = ng.constant([1], dtype=ng.int8)
-    act96 = ng.concat([act66, ng.rshift_round(act95, rshift96)], axis=3)
+    act96 = ng.concat([act66, ng.rshift_round(act95, rshift96, par=par)], axis=3)
 
 
     # [97] conv
@@ -203,7 +203,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale97.set_value(params["aggregator3.0.scale"])
 
     rshift97 = ng.constant([13], dtype=ng.int8)
-    act97 = ng.conv2d(act96, weight97, strides=(1, 1, 1, 1), bias=bias97, scale=scale97, rshift_out=rshift97, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act97 = ng.conv2d(act96, weight97, strides=(1, 1, 1, 1), bias=bias97, scale=scale97, rshift_out=rshift97, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [98] conv
@@ -217,7 +217,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale98.set_value(params["encoder_block3.down_convolution.down_conv.0.scale"])
 
     rshift98 = ng.constant([15], dtype=ng.int8)
-    act98 = ng.conv2d(act97, weight98, strides=(1, 2, 2, 1), bias=bias98, scale=scale98, rshift_out=rshift98, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act98 = ng.conv2d(act97, weight98, strides=(1, 2, 2, 1), bias=bias98, scale=scale98, rshift_out=rshift98, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [99] conv
@@ -231,7 +231,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale99.set_value(params["encoder_block3.standard_convolution.conv1.0.scale"])
 
     rshift99 = ng.constant([14], dtype=ng.int8)
-    act99 = ng.conv2d(act98, weight99, strides=(1, 1, 1, 1), bias=bias99, scale=scale99, rshift_out=rshift99, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act99 = ng.conv2d(act98, weight99, strides=(1, 1, 1, 1), bias=bias99, scale=scale99, rshift_out=rshift99, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [100] conv
@@ -245,7 +245,7 @@ def cost_volume_encoder(act78, act74, act70, act66, act80, params,
     scale100.set_value(params["encoder_block3.standard_convolution.conv2.0.scale"])
 
     rshift100 = ng.constant([16], dtype=ng.int8)
-    act100 = ng.conv2d(act99, weight100, strides=(1, 1, 1, 1), bias=bias100, scale=scale100, rshift_out=rshift100, act_func=ng.relu, asymmetric_clip=True, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act100 = ng.conv2d(act99, weight100, strides=(1, 1, 1, 1), bias=bias100, scale=scale100, rshift_out=rshift100, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     return act82, act87, act92, act97, act100
