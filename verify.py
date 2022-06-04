@@ -133,8 +133,9 @@ class Verifier():
             ng_inputs["cell_state"] = cell_state_value
 
             input_layer_values = ng_inputs
-            eval_outs = ng.eval(layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full, **ng_inputs)
-            output_layer_value = eval_outs[-1]
+            output_layers = layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full
+            eval_outs = ng.eval(output_layers, **ng_inputs)
+            output_layer_values = dict(zip(self.files, eval_outs))
 
             lstm_state = eval_outs[-2], eval_outs[-3]
             keyframe_buffer.add_new_keyframe(inputs["reference_pose"][n][0], eval_outs[len(layers)+3])
@@ -146,7 +147,7 @@ class Verifier():
             idx += 1
 
         print("\t%f [s]" % (time.process_time() - start_time))
-        return input_layer_values, output_layer_value
+        return input_layer_values, output_layer_values, output_layers
 
 
     def verify_one(self, layers, reference_features, cost_volume, skips, lstm_states, depth_full, verbose=False):
@@ -188,10 +189,11 @@ class Verifier():
         ng_inputs["cell_state"] = cell_state_value
 
         input_layer_values = ng_inputs
-        eval_outs = ng.eval(layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full, **ng_inputs)
-        output_layer_value = eval_outs[-1]
+        output_layers = layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full
+        eval_outs = ng.eval(output_layers, **ng_inputs)
+        output_layer_values = dict(zip(self.files, eval_outs))
 
         print_results(eval_outs, idx, verbose)
 
         print("\t%f [s]" % (time.process_time() - start_time))
-        return input_layer_values, output_layer_value
+        return input_layer_values, output_layer_values, output_layers

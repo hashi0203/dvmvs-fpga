@@ -72,8 +72,8 @@ if __name__ == '__main__':
     max_n_measurement_frames = 2
     project_name = "dvmvs"
 
-    par_ich = 8
-    par_och = 32
+    par_ich = 1
+    par_och = 1
     par = par_och
     pars = {"par_ich": par_ich, "par_och": par_och, "par": par}
 
@@ -97,9 +97,9 @@ if __name__ == '__main__':
     print("\t%f [s]" % (time.process_time() - start_time))
 
 
-    skip_verify = True
+    skip_verify = False
     input_filename = os.path.join(base_dir, 'params_nngen/inputs.npz')
-    output_filename = os.path.join(base_dir, 'params_nngen/output.npz')
+    output_filename = os.path.join(base_dir, 'params_nngen/outputs.npz')
     if skip_verify:
         print("loading input and output values...")
         input_file = np.load(input_filename)
@@ -111,10 +111,10 @@ if __name__ == '__main__':
     else:
         print("verifying...")
         verifier = Verifier(inputs, outputs, max_n_measurement_frames, act_dtype)
-        input_layer_values, output_layer_value = verifier.verify_all(*nets, verbose=False)
-        input_layer_values, output_layer_value = verifier.verify_one(*nets, verbose=True)
+        # input_layer_values, output_layer_value, output_layers = verifier.verify_all(*nets, verbose=False)
+        input_layer_values, output_layer_values, output_layers = verifier.verify_one(*nets, verbose=True)
         np.savez_compressed(input_filename, **input_layer_values)
-        np.savez_compressed(output_filename, output=output_layer_value)
+        np.savez_compressed(output_filename, **output_layer_values)
 
 
     skip_to_ipxact = False
@@ -126,7 +126,7 @@ if __name__ == '__main__':
         print("converting NNgen dataflow to hardware description...")
         # to IP-XACT (the method returns Veriloggen object, as well as to_veriloggen)
         start_time = time.process_time()
-        targ = ng.to_ipxact([output_layer], project_name, silent=False,
+        targ = ng.to_ipxact(output_layers, project_name, silent=False,
                             config={'maxi_datawidth': axi_datawidth})
         print("\t%f [s]" % (time.process_time() - start_time))
         print('# IP-XACT was generated. Check the current directory.')
