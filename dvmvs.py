@@ -97,7 +97,7 @@ if __name__ == '__main__':
     print("\t%f [s]" % (time.process_time() - start_time))
 
 
-    skip_verify = False
+    skip_verify = True
     input_filename = os.path.join(base_dir, 'params_nngen/inputs.npz')
     output_filename = os.path.join(base_dir, 'params_nngen/outputs.npz')
     if skip_verify:
@@ -107,7 +107,7 @@ if __name__ == '__main__':
         for f in input_file.files:
             input_layer_values[f] = input_file[f]
         output_file = np.load(output_filename)
-        output_layer_value = output_file[output_file.files[0]]
+        output_layer_value = output_file[output_file.files[-1]]
     else:
         print("verifying...")
         verifier = Verifier(inputs, outputs, max_n_measurement_frames, act_dtype)
@@ -115,6 +115,7 @@ if __name__ == '__main__':
         input_layer_values, output_layer_values, output_layers = verifier.verify_one(*nets, verbose=True)
         np.savez_compressed(input_filename, **input_layer_values)
         np.savez_compressed(output_filename, **output_layer_values)
+        output_layer_value = output_layer_values[-1]
 
 
     skip_to_ipxact = False
@@ -126,7 +127,7 @@ if __name__ == '__main__':
         print("converting NNgen dataflow to hardware description...")
         # to IP-XACT (the method returns Veriloggen object, as well as to_veriloggen)
         start_time = time.process_time()
-        targ = ng.to_ipxact(output_layers, project_name, silent=False,
+        targ = ng.to_ipxact([output_layer], project_name, silent=False,
                             config={'maxi_datawidth': axi_datawidth})
         print("\t%f [s]" % (time.process_time() - start_time))
         print('# IP-XACT was generated. Check the current directory.')
