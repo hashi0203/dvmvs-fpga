@@ -83,9 +83,6 @@ class Verifier():
                                          optimal_R_score=test_optimal_R_measure,
                                          store_return_indices=False)
 
-        input_layer_values = None
-        output_layer_value = None
-
         start_time = time.process_time()
 
         lstm_state = None
