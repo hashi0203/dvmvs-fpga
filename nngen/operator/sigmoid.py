@@ -28,7 +28,7 @@ class sigmoid(bt._ActFuncOperator):
                                      dtype=dtype, shape=shape, name=name, par=par)
 
     def _get_expected_scale_factor(self):
-        return (2 ** (self.lut_addrwidth - 1)) / self.lut_clip
+        return (2 ** self.lut_addrwidth) / self.lut_clip
 
     def _get_features_scale_shamt(self):
         expected_scale_factor = self._get_expected_scale_factor()
@@ -49,11 +49,11 @@ class sigmoid(bt._ActFuncOperator):
         return (base, self.lut_addrwidth, self.lut_clip, self.range_rate)
 
     def op(self, strm, *args, **kwargs):
-        features_signed = self.args[0].get_signed()
+        # features_signed = self.args[0].get_signed()
 
-        features_scale = strm.ReinterpretCast(self.features_scale_cparam,
-                                              width=self.features_scale_cparam.width + 1,
-                                              signed=features_signed)
+        # features_scale = strm.ReinterpretCast(self.features_scale_cparam,
+        #                                       width=self.features_scale_cparam.width + 1,
+        #                                       signed=features_signed)
         # mul = strm.Times(args[0], features_scale)
         # mul.width = mul.width + features_scale.width
 
@@ -62,7 +62,7 @@ class sigmoid(bt._ActFuncOperator):
         #                                       signed=False)
         # sra = strm.Sra(mul, features_shamt)
         sra = args[0]
-        lut_addr = strm.Slice(sra, self.lut_addrwidth - 1, 0)
+        lut_addr = strm.Slice(strm.Abs(sra), self.lut_addrwidth - 1, 0)
 
         out_width = self.dtype.width
         out_point = self.dtype.point
@@ -76,17 +76,18 @@ class sigmoid(bt._ActFuncOperator):
             return int(np.around((1 / (1 + np.exp(-x))) * out_scale).astype(np.int64))
 
         addr_scale = 1 / self._get_expected_scale_factor()
-        patterns_p = [_sigmoid(i * addr_scale)
-                      for i in range(2 ** (self.lut_addrwidth - 1))]
-        patterns_n = [_sigmoid((-i - 1) * addr_scale)
-                      for i in range(2 ** (self.lut_addrwidth - 1))]
-        patterns_n.reverse()
+        # patterns_p = [_sigmoid(i * addr_scale)
+        #               for i in range(2 ** (self.lut_addrwidth - 1))]
+        # patterns_n = [_sigmoid((-i - 1) * addr_scale)
+        #               for i in range(2 ** (self.lut_addrwidth - 1))]
+        # patterns_n.reverse()
 
-        patterns = patterns_p + patterns_n
+        # patterns = patterns_p + patterns_n
+        patterns = [_sigmoid(i * addr_scale) for i in range(2 ** self.lut_addrwidth)]
 
         lut = strm.LUT(lut_addr, patterns, out_width, out_point, out_signed)
 
-        p_th = 2 ** (self.lut_addrwidth - 1) - 1
+        p_th = 2 ** self.lut_addrwidth - 1
         n_th = -1 * p_th
 
         if out_point == 0:
@@ -97,7 +98,7 @@ class sigmoid(bt._ActFuncOperator):
             th_scale = out_scale << (-1 * out_point)
 
         p = strm.Mux(sra > p_th, th_scale, lut)
-        n = strm.Mux(sra < n_th, 0, lut)
+        n = strm.Sub(th_scale, strm.Mux(sra < n_th, th_scale, lut))
         out = strm.Mux(sra >= 0, p, n)
 
         return out

@@ -5,7 +5,7 @@ import kornia
 
 class sigmoid(ng.sigmoid):
     def __init__(self, features, par=1):
-        ng.sigmoid.__init__(self, features, lut_addrwidth=9, lut_clip=8.0, range_rate=0.5, dtype=ng.int16, par=par)
+        ng.sigmoid.__init__(self, features, lut_clip=8.0, range_rate=0.5, dtype=ng.int16, par=par)
 
 
 def rshift_round_and_clip(act, rshift, par, dtype):

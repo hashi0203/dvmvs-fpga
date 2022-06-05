@@ -97,7 +97,7 @@ if __name__ == '__main__':
     print("\t%f [s]" % (time.process_time() - start_time))
 
 
-    skip_verify = True
+    skip_verify = False
     input_filename = os.path.join(base_dir, 'params_nngen/inputs.npz')
     output_filename = os.path.join(base_dir, 'params_nngen/outputs.npz')
     if skip_verify:
@@ -111,11 +111,11 @@ if __name__ == '__main__':
     else:
         print("verifying...")
         verifier = Verifier(inputs, outputs, max_n_measurement_frames, act_dtype)
-        # input_layer_values, output_layer_value, output_layers = verifier.verify_all(*nets, verbose=False)
+        # input_layer_values, output_layer_values, output_layers = verifier.verify_all(*nets, verbose=False)
         input_layer_values, output_layer_values, output_layers = verifier.verify_one(*nets, verbose=True)
         np.savez_compressed(input_filename, **input_layer_values)
         np.savez_compressed(output_filename, **output_layer_values)
-        output_layer_value = output_layer_values[-1]
+        output_layer_value = output_layer_values['depth_org']
 
 
     skip_to_ipxact = False

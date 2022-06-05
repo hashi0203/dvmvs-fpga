@@ -32,10 +32,10 @@ def sigmoid(features,
     def _sigmoid(x):
         return np.around((1 / (1 + np.exp(-x))) * out_scale).astype(np.int64)
 
-    addr_scale = lut_clip / (2 ** (lut_addrwidth - 1))
-    lut = _sigmoid(sra * addr_scale)
+    addr_scale = lut_clip / (2 ** lut_addrwidth)
+    lut = _sigmoid(np.abs(sra) * addr_scale)
 
-    p_th = 2 ** (lut_addrwidth - 1) - 1
+    p_th = 2 ** lut_addrwidth - 1
     n_th = -1 * p_th
 
     if out_point == 0:
@@ -46,7 +46,7 @@ def sigmoid(features,
         th_scale = out_scale << (-1 * out_point)
 
     p = np.where(sra > p_th, th_scale, lut)
-    n = np.where(sra < n_th, 0, lut)
+    n = th_scale - np.where(sra < n_th, th_scale, lut)
     out = np.where(sra >= 0, p, n)
 
     return out
