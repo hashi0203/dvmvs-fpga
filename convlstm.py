@@ -13,6 +13,7 @@ class celu():
         tbshift = 5
         celushift = 12
         xshift = self.xshift
+        y = np.zeros_like(x)
 
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):
@@ -20,13 +21,13 @@ class celu():
                     for l in range(x.shape[3]):
                         tb_idx = (-x[i][j][k][l]) >> (xshift - tbshift)
                         if x[i][j][k][l] > 0:
-                            x[i][j][k][l] = x[i][j][k][l]
+                            y[i][j][k][l] = x[i][j][k][l]
                         elif tb_idx >= (1 << tbbit):
-                            x[i][j][k][l] = -1 << xshift
+                            y[i][j][k][l] = -1 << xshift
                         else:
-                            x[i][j][k][l] = np.round(celu_table[tb_idx] / (float) (1 << (celushift - xshift))).astype(x.dtype)
+                            y[i][j][k][l] = np.round(celu_table[tb_idx] / (float) (1 << (celushift - xshift))).astype(x.dtype)
 
-        return x
+        return y
 
 
 class ln():
