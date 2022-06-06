@@ -23,21 +23,13 @@ def prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype):
     print("preparing placeholders...")
 
     reference_image = ng.placeholder(dtype=act_dtype, shape=(batchsize, 64, 96, 3), name='reference_image')
-    frame_number = ng.placeholder(dtype=act_dtype, shape=(1,), name='frame_number')
-    n_measurement_frames = ng.placeholder(dtype=act_dtype, shape=(1,), name='n_measurement_frames')
-    measurement_features = [ng.placeholder(dtype=act_dtype, shape=(batchsize, 32, 48, 32), name='measurement_feature%d' % m)
-                            for m in range(max_n_measurement_frames)]
     hidden_state = ng.placeholder(dtype=act_dtype, shape=(batchsize, 2, 3, 512), name='hidden_state')
     cell_state = ng.placeholder(dtype=act_dtype, shape=(batchsize, 2, 3, 512), name='cell_state')
 
-    # feature_list = ["half", "quarter", "one_eight", "one_sixteen"]
-    # reference_features = [ng.placeholder(dtype=act_dtype, shape=(batchsize, 32 >> i, 48 >> i, 32), name='feature_%s' % feature_list[i]) for i in range(4)]
-
-    return reference_image, frame_number, n_measurement_frames, measurement_features, hidden_state, cell_state
+    return reference_image, hidden_state, cell_state
 
 
-def prepare_nets(reference_image, frame_number, n_measurement_frames, measurement_features, hidden_state, cell_state,
-                 pars, dtypes):
+def prepare_nets(reference_image, hidden_state, cell_state, pars, dtypes):
 
     externs = []
 
@@ -49,8 +41,8 @@ def prepare_nets(reference_image, frame_number, n_measurement_frames, measuremen
     externs.extend(extern)
 
     print("preparing cost volume fusion...")
-    cost_volume, extern = cost_volume_fusion(frame_number, reference_features[0], n_measurement_frames, measurement_features,
-                                             inputs["half_K"], inputs["current_pose"], inputs["measurement_poses"], dtypes["act_dtype"])
+    cost_volume, extern, fusion = cost_volume_fusion(reference_features[0], inputs["half_K"],
+                                                     inputs["current_pose"], inputs["measurement_poses"], dtypes["act_dtype"])
     externs.extend(extern)
 
     print("preparing cost volume encoder...")
@@ -64,7 +56,7 @@ def prepare_nets(reference_image, frame_number, n_measurement_frames, measuremen
     depth_full, extern = cost_volume_decoder(reference_image, *skips[:-1], lstm_states[0], params, **pars, **dtypes)
     externs.extend(extern)
 
-    return (layers, reference_features, cost_volume, skips, lstm_states, depth_full), externs
+    return (layers, reference_features, cost_volume, skips, lstm_states, depth_full), externs, fusion
 
 
 if __name__ == '__main__':
@@ -72,9 +64,9 @@ if __name__ == '__main__':
     max_n_measurement_frames = 2
     project_name = "dvmvs"
 
-    par_ich = 2
-    par_och = 4
-    par_och_k5 = 2
+    par_ich = 1
+    par_och = 1
+    par_och_k5 = 1
     par = par_och
     pars = {"par_ich": par_ich, "par_och": par_och, "par_och_k5": par_och_k5, "par": par}
 
@@ -93,8 +85,7 @@ if __name__ == '__main__':
 
     start_time = time.process_time()
     input_layers = prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype)
-    nets, externs = prepare_nets(*input_layers, pars, dtypes)
-    output_layer = nets[-1][0]
+    nets, externs, fusion = prepare_nets(*input_layers, pars, dtypes)
     print("\t%f [s]" % (time.process_time() - start_time))
 
 
@@ -111,13 +102,14 @@ if __name__ == '__main__':
         output_layer_value = output_file[output_file.files[-1]]
     else:
         print("verifying...")
-        verifier = Verifier(inputs, outputs, max_n_measurement_frames, act_dtype)
+        verifier = Verifier(inputs, outputs, max_n_measurement_frames, fusion, act_dtype)
         # input_layer_values, output_layer_values, output_layers = verifier.verify_all(*nets, verbose=False)
         input_layer_values, output_layer_values, output_layers = verifier.verify_one(*nets, verbose=True)
         np.savez_compressed(input_filename, **input_layer_values)
         np.savez_compressed(output_filename, **output_layer_values)
         output_layer_value = output_layer_values['depth_org']
 
+    output_layers = [nets[-2][1], nets[-2][0], nets[-1][0]]
 
     skip_to_ipxact = False
     axi_datawidth = 128
@@ -128,7 +120,7 @@ if __name__ == '__main__':
         print("converting NNgen dataflow to hardware description...")
         # to IP-XACT (the method returns Veriloggen object, as well as to_veriloggen)
         start_time = time.process_time()
-        targ = ng.to_ipxact([output_layer], project_name, silent=False,
+        targ = ng.to_ipxact(output_layers, project_name, silent=False,
                             config={'maxi_datawidth': axi_datawidth})
         print("\t%f [s]" % (time.process_time() - start_time))
         print('# IP-XACT was generated. Check the current directory.')
@@ -147,29 +139,14 @@ if __name__ == '__main__':
         # convert weight values to a memory image:
         # on a real FPGA platform, this image will be used as a part of the model definition.
         start_time = time.process_time()
-        param_data = ng.export_ndarray([output_layer], chunk_size)
+        param_data = ng.export_ndarray(output_layers, chunk_size)
         np.savez_compressed(param_filename, param_data)
         print('# weights was saved at %s' % param_filename)
         print("\t%f [s]" % (time.process_time() - start_time))
 
 
-    flat_input_layers = []
-    for layer in input_layers:
-        if isinstance(layer, list):
-            flat_input_layers.extend(layer)
-        else:
-            flat_input_layers.append(layer)
-
-    measurement_names = ["measurement_feature%d" % m for m in range(max_n_measurement_frames)]
-    input_names = ["reference_image", "frame_number", "n_measurement_frames"] + measurement_names + ["hidden_state", "cell_state"]
-    flat_input_layer_values = []
-    for name in input_names:
-        if isinstance(input_layer_values[name], list):
-            flat_input_layer_values.extend(input_layer_values[name])
-        else:
-            flat_input_layer_values.append(input_layer_values[name])
-
-    for name, layer in zip(input_names, flat_input_layers):
+    input_names = ["reference_image", "hidden_state", "cell_state"]
+    for name, layer in zip(input_names, input_layers):
         print("%20s: %6d," % (name, layer.addr), layer.aligned_shape)
 
     for extern in externs:
@@ -178,8 +155,8 @@ if __name__ == '__main__':
         for i, e in enumerate(extern[1]):
             print("\tinput%d: addr %d, shape" % (i, e.addr), e.shape, ", aligned_shape", e.aligned_shape)
 
-    print("simulating verilog code...")
-    start_time = time.process_time()
-    simulator = Simulator(project_name, targ, param_data, axi_datawidth, chunk_size, par_ich, par_och, act_dtype)
-    simulator.simulate(flat_input_layers, flat_input_layer_values, output_layer, output_layer_value)
-    print("\t%f [s]" % (time.process_time() - start_time))
+    # print("simulating verilog code...")
+    # start_time = time.process_time()
+    # simulator = Simulator(project_name, targ, param_data, axi_datawidth, chunk_size, par_ich, par_och, act_dtype)
+    # simulator.simulate(flat_input_layers, flat_input_layer_values, output_layer, output_layer_value)
+    # print("\t%f [s]" % (time.process_time() - start_time))

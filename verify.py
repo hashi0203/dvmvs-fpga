@@ -7,11 +7,12 @@ from utils import lstm_state_calculator
 
 class Verifier():
 
-    def __init__(self, inputs, outputs, max_n_measurement_frames, act_dtype):
+    def __init__(self, inputs, outputs, max_n_measurement_frames, fusion, act_dtype):
 
         self.inputs = inputs
         self.outputs = outputs
         self.max_n_measurement_frames = max_n_measurement_frames
+        self.fusion = fusion
         self.act_dtype = act_dtype
 
         self.files = ["layer1", "layer2", "layer3", "layer4", "layer5",
@@ -68,6 +69,7 @@ class Verifier():
     def verify_all(self, layers, reference_features, cost_volume, skips, lstm_states, depth_full, verbose=False):
         inputs = self.inputs
         max_n_measurement_frames = self.max_n_measurement_frames
+        fusion = self.fusion
         shifts = self.shifts
         prepare_input_value = self.prepare_input_value
         calc_depth = self.calc_depth
@@ -129,6 +131,8 @@ class Verifier():
             ng_inputs["hidden_state"] = hidden_state_value
             ng_inputs["cell_state"] = cell_state_value
 
+            fusion.prep(frame_number_value, n_measurement_frames_value, measurement_features_value)
+
             input_layer_values = ng_inputs
             output_layers = layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full
             eval_outs = ng.eval(output_layers, **ng_inputs)
@@ -151,6 +155,7 @@ class Verifier():
         inputs = self.inputs
         outputs = self.outputs
         max_n_measurement_frames = self.max_n_measurement_frames
+        fusion = self.fusion
         prepare_input_value = self.prepare_input_value
         calc_depth = self.calc_depth
         print_results = self.print_results
@@ -184,6 +189,8 @@ class Verifier():
             ng_inputs["measurement_feature%d" % m] = measurement_features_value[m]
         ng_inputs["hidden_state"] = hidden_state_value
         ng_inputs["cell_state"] = cell_state_value
+
+        fusion.prep(frame_number_value, n_measurement_frames_value, measurement_features_value)
 
         input_layer_values = ng_inputs
         output_layers = layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full
