@@ -2,7 +2,7 @@ import numpy as np
 import nngen as ng
 from utils import sigmoid, interpolate
 
-def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params, par_ich, par_och, par,
+def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params, par_ich, par_och, par_och_k5, par,
                         weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
 
     externs = []
@@ -222,7 +222,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params, par_ic
     scale129.set_value(params["decoder_block4.up_convolution.conv.0.scale"])
 
     rshift129 = ng.constant([15], dtype=ng.int8)
-    act129 = ng.conv2d(act128, weight129, strides=(1, 1, 1, 1), bias=bias129, scale=scale129, rshift_out=rshift129, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act129 = ng.conv2d(act128, weight129, strides=(1, 1, 1, 1), bias=bias129, scale=scale129, rshift_out=rshift129, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [130] interpolate
@@ -246,7 +246,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params, par_ic
     scale132.set_value(params["decoder_block4.convolution1.0.scale"])
 
     rshift132 = ng.constant([14], dtype=ng.int8)
-    act132 = ng.conv2d(act131, weight132, strides=(1, 1, 1, 1), bias=bias132, scale=scale132, rshift_out=rshift132, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act132 = ng.conv2d(act131, weight132, strides=(1, 1, 1, 1), bias=bias132, scale=scale132, rshift_out=rshift132, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [133] conv
@@ -260,7 +260,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params, par_ic
     scale133.set_value(params["decoder_block4.convolution2.0.scale"])
 
     rshift133 = ng.constant([13], dtype=ng.int8)
-    act133 = ng.conv2d(act132, weight133, strides=(1, 1, 1, 1), bias=bias133, scale=scale133, rshift_out=rshift133, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act133 = ng.conv2d(act132, weight133, strides=(1, 1, 1, 1), bias=bias133, scale=scale133, rshift_out=rshift133, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [134] conv
@@ -300,7 +300,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params, par_ic
     scale138.set_value(params["refine.0.0.scale"])
 
     rshift138 = ng.constant([12], dtype=ng.int8)
-    act138 = ng.conv2d(act137, weight138, strides=(1, 1, 1, 1), bias=bias138, scale=scale138, rshift_out=rshift138, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act138 = ng.conv2d(act137, weight138, strides=(1, 1, 1, 1), bias=bias138, scale=scale138, rshift_out=rshift138, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [139] conv
@@ -314,7 +314,7 @@ def cost_volume_decoder(act0, act82, act87, act92, act97, act107, params, par_ic
     scale139.set_value(params["refine.1.0.scale"])
 
     rshift139 = ng.constant([13], dtype=ng.int8)
-    act139 = ng.conv2d(act138, weight139, strides=(1, 1, 1, 1), bias=bias139, scale=scale139, rshift_out=rshift139, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act139 = ng.conv2d(act138, weight139, strides=(1, 1, 1, 1), bias=bias139, scale=scale139, rshift_out=rshift139, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [140] conv

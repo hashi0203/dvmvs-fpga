@@ -2,7 +2,7 @@ import numpy as np
 import nngen as ng
 from utils import rshift_round_and_clip, interpolate
 
-def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och, par,
+def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och, par_och_k5, par,
                      weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
 
     externs = []

@@ -2,7 +2,7 @@ import numpy as np
 import nngen as ng
 from utils import rshift_round_and_clip
 
-def feature_extractor(act0, params, par_ich, par_och, par,
+def feature_extractor(act0, params, par_ich, par_och, par_och_k5, par,
                       weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
 
     # [1] conv
@@ -226,7 +226,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale16.set_value(params["layer3.0.0.layers.3.scale"])
 
     rshift16 = ng.constant([11], dtype=ng.int8)
-    act16 = ng.conv2d(act15, weight16, strides=(1, 2, 2, 1), bias=bias16, scale=scale16, rshift_out=rshift16, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act16 = ng.conv2d(act15, weight16, strides=(1, 2, 2, 1), bias=bias16, scale=scale16, rshift_out=rshift16, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [17] conv
@@ -272,7 +272,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale19.set_value(params["layer3.0.1.layers.3.scale"])
 
     rshift19 = ng.constant([9], dtype=ng.int8)
-    act19 = ng.conv2d(act18, weight19, strides=(1, 1, 1, 1), bias=bias19, scale=scale19, rshift_out=rshift19, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act19 = ng.conv2d(act18, weight19, strides=(1, 1, 1, 1), bias=bias19, scale=scale19, rshift_out=rshift19, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [20] conv
@@ -323,7 +323,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale23.set_value(params["layer3.0.2.layers.3.scale"])
 
     rshift23 = ng.constant([9], dtype=ng.int8)
-    act23 = ng.conv2d(act22, weight23, strides=(1, 1, 1, 1), bias=bias23, scale=scale23, rshift_out=rshift23, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act23 = ng.conv2d(act22, weight23, strides=(1, 1, 1, 1), bias=bias23, scale=scale23, rshift_out=rshift23, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [24] conv
@@ -375,7 +375,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale27.set_value(params["layer4.0.0.layers.3.scale"])
 
     rshift27 = ng.constant([12], dtype=ng.int8)
-    act27 = ng.conv2d(act26, weight27, strides=(1, 2, 2, 1), bias=bias27, scale=scale27, rshift_out=rshift27, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act27 = ng.conv2d(act26, weight27, strides=(1, 2, 2, 1), bias=bias27, scale=scale27, rshift_out=rshift27, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [28] conv
@@ -421,7 +421,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale30.set_value(params["layer4.0.1.layers.3.scale"])
 
     rshift30 = ng.constant([7], dtype=ng.int8)
-    act30 = ng.conv2d(act29, weight30, strides=(1, 1, 1, 1), bias=bias30, scale=scale30, rshift_out=rshift30, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act30 = ng.conv2d(act29, weight30, strides=(1, 1, 1, 1), bias=bias30, scale=scale30, rshift_out=rshift30, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [31] conv
@@ -473,7 +473,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale34.set_value(params["layer4.0.2.layers.3.scale"])
 
     rshift34 = ng.constant([8], dtype=ng.int8)
-    act34 = ng.conv2d(act33, weight34, strides=(1, 1, 1, 1), bias=bias34, scale=scale34, rshift_out=rshift34, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act34 = ng.conv2d(act33, weight34, strides=(1, 1, 1, 1), bias=bias34, scale=scale34, rshift_out=rshift34, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [35] conv
@@ -623,7 +623,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale45.set_value(params["layer5.0.0.layers.3.scale"])
 
     rshift45 = ng.constant([9], dtype=ng.int8)
-    act45 = ng.conv2d(act44, weight45, strides=(1, 2, 2, 1), bias=bias45, scale=scale45, rshift_out=rshift45, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act45 = ng.conv2d(act44, weight45, strides=(1, 2, 2, 1), bias=bias45, scale=scale45, rshift_out=rshift45, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [46] conv
@@ -669,7 +669,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale48.set_value(params["layer5.0.1.layers.3.scale"])
 
     rshift48 = ng.constant([7], dtype=ng.int8)
-    act48 = ng.conv2d(act47, weight48, strides=(1, 1, 1, 1), bias=bias48, scale=scale48, rshift_out=rshift48, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act48 = ng.conv2d(act47, weight48, strides=(1, 1, 1, 1), bias=bias48, scale=scale48, rshift_out=rshift48, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [49] conv
@@ -721,7 +721,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale52.set_value(params["layer5.0.2.layers.3.scale"])
 
     rshift52 = ng.constant([7], dtype=ng.int8)
-    act52 = ng.conv2d(act51, weight52, strides=(1, 1, 1, 1), bias=bias52, scale=scale52, rshift_out=rshift52, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act52 = ng.conv2d(act51, weight52, strides=(1, 1, 1, 1), bias=bias52, scale=scale52, rshift_out=rshift52, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [53] conv
@@ -773,7 +773,7 @@ def feature_extractor(act0, params, par_ich, par_och, par,
     scale56.set_value(params["layer5.0.3.layers.3.scale"])
 
     rshift56 = ng.constant([7], dtype=ng.int8)
-    act56 = ng.conv2d(act55, weight56, strides=(1, 1, 1, 1), bias=bias56, scale=scale56, rshift_out=rshift56, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act56 = ng.conv2d(act55, weight56, strides=(1, 1, 1, 1), bias=bias56, scale=scale56, rshift_out=rshift56, act_func=ng.relu, asymmetric_clip=True, par_ich=par_ich, par_och=par_och_k5, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [57] conv

@@ -72,10 +72,11 @@ if __name__ == '__main__':
     max_n_measurement_frames = 2
     project_name = "dvmvs"
 
-    par_ich = 1
-    par_och = 1
+    par_ich = 2
+    par_och = 4
+    par_och_k5 = 2
     par = par_och
-    pars = {"par_ich": par_ich, "par_och": par_och, "par": par}
+    pars = {"par_ich": par_ich, "par_och": par_och, "par_och_k5": par_och_k5, "par": par}
 
     weight_dtype = ng.int8
     bias_dtype = ng.int32

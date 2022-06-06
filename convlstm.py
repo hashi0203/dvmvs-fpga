@@ -41,7 +41,7 @@ class ln():
         return round_and_clip((x - e) / np.sqrt(v + eps) * (1 << self.lshift), x.dtype)
 
 
-def LSTMFusion(act100, act101, act102, params, par_ich, par_och, par,
+def LSTMFusion(act100, act101, act102, params, par_ich, par_och, par_och_k5, par,
                weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
 
     externs = []
