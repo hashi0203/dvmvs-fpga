@@ -44,9 +44,9 @@ class sigmoid(bt._ActFuncOperator):
         return OrderedDict([('features_scale_cparam', q_features_scale),
                             ('features_shamt_cparam', q_features_shamt)])
 
-    def get_stream_hash(self):
-        base = bt._ActFuncOperator.get_stream_hash(self)
-        return (base, self.lut_addrwidth, self.lut_clip, self.range_rate)
+    # def get_stream_hash(self):
+    #     base = bt._ActFuncOperator.get_stream_hash(self)
+    #     return (base, self.lut_addrwidth, self.lut_clip, self.range_rate)
 
     def op(self, strm, *args, **kwargs):
         # features_signed = self.args[0].get_signed()

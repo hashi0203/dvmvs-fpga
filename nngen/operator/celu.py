@@ -5,7 +5,6 @@ from __future__ import division
 import functools
 import math
 import numpy as np
-from collections import OrderedDict
 
 import nngen.basic_types as bt
 from nngen.quantizer import util
@@ -40,12 +39,6 @@ class celu(bt._ActFuncOperator):
         q_features_shamt = round(math.log(scale_factor, 2))
         return q_features_scale, q_features_shamt
 
-    def get_local_control_param_values(self):
-        q_features_scale, q_features_shamt = self._get_features_scale_shamt()
-        return OrderedDict([('rshift_lut_in_cparam', self.rshift_lut_in),
-                            ('features_scale_cparam', q_features_scale),
-                            ('features_shamt_cparam', q_features_shamt)])
-
     def get_stream_hash(self):
         base = bt._ActFuncOperator.get_stream_hash(self)
         return (base, self.lut_addrwidth, self.lut_clip, self.range_rate)
@@ -64,11 +57,7 @@ class celu(bt._ActFuncOperator):
         #                                       signed=False)
         # sra = strm.Sra(mul, features_shamt)
 
-        rshift_lut_in = strm.ReinterpretCast(self.rshift_lut_in_cparam,
-                                             width=self.rshift_lut_in_cparam.width,
-                                             signed=False)
-
-        sra = strm.SraRound(args[0], rshift_lut_in)
+        sra = strm.SraRound(args[0], 7) # 7 is heuristic for my case
         lut_addr = strm.Slice(sra, self.lut_addrwidth - 1, 0)
 
         out_width = self.dtype.width
