@@ -207,7 +207,7 @@ class lstm_state_calculator():
         return prepare_input_value(h_cur.detach().numpy().copy().transpose(0, 2, 3, 1), hshift), c_cur
 
 
-class fusion():
+class Fusion():
     n_depth_levels = 64
 
     def __init__(self, rshift, K, pose1s, pose2ss):
