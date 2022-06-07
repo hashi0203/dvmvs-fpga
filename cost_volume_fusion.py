@@ -112,10 +112,11 @@ def cost_volume_fusion(act78, K, pose1s, pose2ss, act_dtype):
 
     externs = []
 
-    # [80] conv
+    # [79] cost volume fusion
     fusion = Fusion(11, K, pose1s, pose2ss)
-    act80 = ng.extern([act78], shape=(1, 32, 48, 64), dtype=act_dtype, opcode=0x80, func=fusion)
-    externs.append((act80, [act78], "act80 = fusion(act78)"))
+    act79 = ng.extern([act78], shape=(1, 32, 48, 64), dtype=act_dtype, opcode=0x79, func=fusion)
+    externs.append((act79, [act78], "act79 = fusion(act78)"))
 
 
-    return (act80,), externs, fusion
+    return (act79,), externs, fusion
+

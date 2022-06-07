@@ -41,46 +41,46 @@ class ln():
         return round_and_clip((x - e) / np.sqrt(v + eps) * (1 << self.lshift), x.dtype)
 
 
-def LSTMFusion(act100, act101, act102, params, par_ich, par_och, par_och_k5, par,
+def LSTMFusion(act99, act100, act101, params, par_ich, par_och, par_och_k5, par,
                weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
 
     externs = []
 
-    # [103] cat
-    act103 = ng.concat([act100, act101], axis=3)
+    # [102] cat
+    act102 = ng.concat([act99, act100], axis=3)
 
 
-    # [104] conv
-    weight104 = ng.variable(dtype=weight_dtype, shape=(2048, 3, 3, 1024), name="lstm_cell.conv.weight")
-    weight104.set_value(params["lstm_cell.conv.weight"])
+    # [103] conv
+    weight103 = ng.variable(dtype=weight_dtype, shape=(2048, 3, 3, 1024), name="lstm_cell.conv.weight")
+    weight103.set_value(params["lstm_cell.conv.weight"])
 
-    rshift104 = ng.constant([11], dtype=ng.int8)
-    act104 = ng.conv2d(act103, weight104, strides=(1, 1, 1, 1), rshift_out=rshift104, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
-
-
-    # [105] sig_ln_celu
-    slice105s = [ng.slice_(act104, (0, 0, 0, i * 512), (1, 2, 3, (i+1) * 512), (1, 1, 1, 1)) for i in range(4)]
-
-    rshift105 = ng.constant([4], dtype=ng.int8)
-    ii105, ff105, oo105 = [sigmoid(ng.rshift_round(slice105s[i], rshift105, par=par), par=par) for i in range(3)]
-
-    ln105 = ng.extern([slice105s[3]], opcode=0x105, func=ln(12))
-    externs.append((ln105, [slice105s[3]], "ln105 = ln(12)(slice105s[3])"))
-    gg105 = ng.celu(ln105, rshift_lut_in=7, lut_clip=8.0, range_rate=0.125, dtype=act_dtype, par=par)
+    rshift103 = ng.constant([11], dtype=ng.int8)
+    act103 = ng.conv2d(act102, weight103, strides=(1, 1, 1, 1), rshift_out=rshift103, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
-    # [106] cell_state
-    in_rshift106 = ng.constant([2], dtype=ng.int8)
-    out_rshift106 = ng.constant([12], dtype=ng.int8)
-    sum106 = rshift_round_and_clip(ng.add(ng.multiply(ng.rshift_round(ff105, in_rshift106, par=par), act102, par=par, dtype=mid_dtype), ng.multiply(ng.rshift_round(ii105, in_rshift106, par=par), gg105, par=par, dtype=mid_dtype), par=par), out_rshift106, par=par, dtype=act_dtype)
-    act106 = ng.extern([sum106], opcode=0x106, func=ln(12))
-    externs.append((act106, [sum106], "act106 = ln(12)(sum106)"))
+    # [104] sig_ln_celu
+    slice104s = [ng.slice_(act103, (0, 0, 0, i * 512), (1, 2, 3, (i+1) * 512), (1, 1, 1, 1)) for i in range(4)]
+
+    rshift104 = ng.constant([4], dtype=ng.int8)
+    ii104, ff104, oo104 = [sigmoid(ng.rshift_round(slice104s[i], rshift104, par=par), par=par) for i in range(3)]
+
+    ln104 = ng.extern([slice104s[3]], opcode=0x104, func=ln(12))
+    externs.append((ln104, [slice104s[3]], "ln104 = ln(12)(slice104s[3])"))
+    gg104 = ng.celu(ln104, rshift_lut_in=7, lut_clip=8.0, range_rate=0.125, dtype=act_dtype, par=par)
 
 
-    # [107] hidden_state
-    celu107 = ng.celu(act106, rshift_lut_in=7, lut_clip=8.0, range_rate=0.125, dtype=act_dtype, par=par)
-    rshift107 = ng.constant([13], dtype=ng.int8)
-    act107 = rshift_round_and_clip(ng.multiply(celu107, oo105, par=par, dtype=mid_dtype), rshift107, par=par, dtype=act_dtype)
+    # [105] cell_state
+    in_rshift105 = ng.constant([2], dtype=ng.int8)
+    out_rshift105 = ng.constant([12], dtype=ng.int8)
+    sum105 = rshift_round_and_clip(ng.add(ng.multiply(ng.rshift_round(ff104, in_rshift105, par=par), act101, par=par, dtype=mid_dtype), ng.multiply(ng.rshift_round(ii104, in_rshift105, par=par), gg104, par=par, dtype=mid_dtype), par=par), out_rshift105, par=par, dtype=act_dtype)
+    act105 = ng.extern([sum105], opcode=0x105, func=ln(12))
+    externs.append((act105, [sum105], "act105 = ln(12)(sum105)"))
 
 
-    return (act107, act106), externs
+    # [106] hidden_state
+    celu106 = ng.celu(act105, rshift_lut_in=7, lut_clip=8.0, range_rate=0.125, dtype=act_dtype, par=par)
+    rshift106 = ng.constant([13], dtype=ng.int8)
+    act106 = rshift_round_and_clip(ng.multiply(celu106, oo104, par=par, dtype=mid_dtype), rshift106, par=par, dtype=act_dtype)
+
+
+    return (act106, act105), externs

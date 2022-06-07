@@ -19,7 +19,7 @@ from verify import Verifier
 from simulate import Simulator
 
 
-def prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype):
+def prepare_placeholders(batchsize, act_dtype):
     print("preparing placeholders...")
 
     reference_image = ng.placeholder(dtype=act_dtype, shape=(batchsize, 64, 96, 3), name='reference_image')
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     outputs = np.load(os.path.join(base_dir, "params/outputs.npz"))
 
     start_time = time.process_time()
-    input_layers = prepare_placeholders(batchsize, max_n_measurement_frames, act_dtype)
+    input_layers = prepare_placeholders(batchsize, act_dtype)
     nets, externs, fusion = prepare_nets(*input_layers, pars, dtypes)
     print("\t%f [s]" % (time.process_time() - start_time))
 
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         np.savez_compressed(output_filename, **output_layer_values)
         output_layer_value = output_layer_values['depth_org']
 
-    output_layers = [nets[-2][1], nets[-2][0], nets[-1][0]]
+    output_layers = [nets[1][0], nets[-2][1], nets[-2][0], nets[-1][0]]
 
     skip_to_ipxact = False
     axi_datawidth = 128
