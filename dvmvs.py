@@ -92,6 +92,7 @@ if __name__ == '__main__':
     skip_verify = False
     input_filename = os.path.join(base_dir, 'params_nngen/inputs.npz')
     output_filename = os.path.join(base_dir, 'params_nngen/outputs.npz')
+    prediction_filename = os.path.join(base_dir, 'params_nngen/predictions.npz')
     if skip_verify:
         print("loading input and output values...")
         input_file = np.load(input_filename)
@@ -103,7 +104,8 @@ if __name__ == '__main__':
     else:
         print("verifying...")
         verifier = Verifier(inputs, outputs, max_n_measurement_frames, fusion, act_dtype)
-        # input_layer_values, output_layer_values, output_layers = verifier.verify_all(*nets, verbose=False)
+        # input_layer_values, output_layer_values, output_layers, predictions = verifier.verify_all(*nets, verbose=False)
+        # np.savez_compressed(prediction_filename, **predictions)
         input_layer_values, output_layer_values, output_layers = verifier.verify_one(*nets, verbose=True)
         np.savez_compressed(input_filename, **input_layer_values)
         np.savez_compressed(output_filename, **output_layer_values)

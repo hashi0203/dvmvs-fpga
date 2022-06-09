@@ -31,9 +31,9 @@ class Verifier():
 
     def prepare_input_value(self, value, lshift):
         act_dtype = self.act_dtype
-        value *= 1 << lshift
-        value = np.clip(value, -1 * 2 ** (act_dtype.width - 1) - 1, 2 ** (act_dtype.width - 1))
-        return np.round(value.astype(np.float64)).astype(np.int64)
+        ret = value * (1 << lshift)
+        ret = np.clip(ret, -1 * 2 ** (act_dtype.width - 1) - 1, 2 ** (act_dtype.width - 1))
+        return np.round(ret.astype(np.float64)).astype(np.int64)
 
 
     def calc_depth(self, depth_org):
@@ -85,15 +85,20 @@ class Verifier():
                                          optimal_R_score=test_optimal_R_measure,
                                          store_return_indices=False)
 
+        reference_images = inputs["reference_image"]
+        reference_poses = inputs["reference_pose"]
+        n_measurement_frames = inputs["n_measurement_frames"]
+
         start_time = time.process_time()
 
         lstm_state = None
         previous_depth = None
         previous_pose = None
         calc = lstm_state_calculator(inputs, prepare_input_value, 14-1, 12)
+        predictions = {"reference_image": [], "feature_half": [], "measurement_features": [], "hidden_state": [], "cell_state": [], "prediction": []}
         idx = 0
-        for n in range(len(inputs["reference_image"])):
-            response = keyframe_buffer.try_new_keyframe(inputs["reference_pose"][n][0])
+        for n in range(len(reference_images)):
+            response = keyframe_buffer.try_new_keyframe(reference_poses[n][0])
 
             print("evaluating %05d.png (response: %d) ..." % (n + 3, response))
 
@@ -106,23 +111,25 @@ class Verifier():
                 continue
 
             ng_inputs = {}
-            reference_image_value = prepare_input_value(inputs["reference_image"][n].transpose(0, 2, 3, 1), 12)
+            reference_image_value = prepare_input_value(reference_images[n].transpose(0, 2, 3, 1), 12)
             ng_inputs["reference_image"] = reference_image_value
+            predictions["reference_image"].append(reference_image_value.copy())
 
             if response == 0:
                 eval_outs = ng.eval(layers + reference_features[::-1], **ng_inputs)
-                keyframe_buffer.add_new_keyframe(inputs["reference_pose"][n][0], eval_outs[len(layers)+3])
+                keyframe_buffer.add_new_keyframe(reference_poses[n][0], eval_outs[len(layers)+3])
+                predictions["feature_half"].append(eval_outs[len(layers)+3].copy())
                 print_results(eval_outs, idx, verbose)
                 continue
 
-            measurement_features_value = []
             frame_number_value = np.array([idx]).astype(np.int64)
-            n_measurement_frames_value = np.array([inputs["n_measurement_frames"][idx]]).astype(np.int64)
-            for measurement_frame in keyframe_buffer.get_best_measurement_frames(inputs["reference_pose"][n][0], max_n_measurement_frames):
+            measurement_features_value = []
+            n_measurement_frames_value = np.array([n_measurement_frames[idx]]).astype(np.int64)
+            for measurement_frame in keyframe_buffer.get_best_measurement_frames(reference_poses[n][0], max_n_measurement_frames):
                 measurement_features_value.append(measurement_frame[1])
             for _ in range(max_n_measurement_frames - len(measurement_features_value)):
                 measurement_features_value.append(np.zeros_like(measurement_features_value[0]))
-            hidden_state_value, cell_state_value = calc(lstm_state, previous_depth, previous_pose, inputs["reference_pose"][n])
+            hidden_state_value, cell_state_value = calc(lstm_state, previous_depth, previous_pose, reference_poses[n])
 
             ng_inputs["frame_number"] = frame_number_value
             ng_inputs["n_measurement_frames"] = n_measurement_frames_value
@@ -139,16 +146,22 @@ class Verifier():
             output_layer_values = dict(zip(self.files, eval_outs))
 
             lstm_state = eval_outs[-2], eval_outs[-3]
-            keyframe_buffer.add_new_keyframe(inputs["reference_pose"][n][0], eval_outs[len(layers)+3])
+            keyframe_buffer.add_new_keyframe(reference_poses[n][0], eval_outs[len(layers)+3])
             previous_depth = calc_depth((eval_outs[-1].transpose(0, 3, 1, 2) / (1 << shifts[-1])).astype(np.float32))
-            previous_pose = inputs["reference_pose"][n].copy()
+            previous_pose = reference_poses[n].copy()
+
+            predictions["prediction"].append(previous_depth.copy())
+            predictions["feature_half"].append(eval_outs[len(layers)+3].copy())
+            predictions["measurement_features"].append(measurement_features_value.copy())
+            predictions["hidden_state"].append(hidden_state_value.copy())
+            predictions["cell_state"].append(cell_state_value.copy())
 
             print_results(eval_outs, idx, verbose)
 
             idx += 1
 
         print("\t%f [s]" % (time.process_time() - start_time))
-        return input_layer_values, output_layer_values, output_layers
+        return input_layer_values, output_layer_values, output_layers, predictions
 
 
     def verify_one(self, layers, reference_features, cost_volume, skips, lstm_states, depth_full, verbose=False):
@@ -159,6 +172,11 @@ class Verifier():
         prepare_input_value = self.prepare_input_value
         calc_depth = self.calc_depth
         print_results = self.print_results
+
+        reference_images = inputs["reference_image"]
+        reference_poses = inputs["reference_pose"]
+        n_measurement_frames = inputs["n_measurement_frames"]
+        measurement_features = inputs["measurement_features"]
 
         start_time = time.process_time()
 
@@ -171,17 +189,17 @@ class Verifier():
         print("evaluating %05d.png ..." % (n + 3))
 
         ng_inputs = {}
-        reference_image_value = prepare_input_value(inputs["reference_image"][n].transpose(0, 2, 3, 1), 12)
+        reference_image_value = prepare_input_value(reference_images[n].transpose(0, 2, 3, 1), 12)
         ng_inputs["reference_image"] = reference_image_value
 
         frame_number_value = np.array([idx]).astype(np.int64)
-        n_measurement_frames_value = np.array([inputs["n_measurement_frames"][idx]]).astype(np.int64)
-        measurement_features_value = prepare_input_value(inputs["measurement_features"][idx].transpose(0, 1, 3, 4, 2), 9)
+        n_measurement_frames_value = np.array([n_measurement_frames[idx]]).astype(np.int64)
+        measurement_features_value = prepare_input_value(measurement_features[idx].transpose(0, 1, 3, 4, 2), 9)
 
         lstm_state = inputs["hidden_state"][idx], inputs["cell_state"][idx]
         previous_depth = calc_depth(outputs["depth_org"][idx-1])
-        previous_pose = inputs["reference_pose"][prev_n]
-        hidden_state_value, cell_state_value = calc(lstm_state, previous_depth, previous_pose, inputs["reference_pose"][n])
+        previous_pose = reference_poses[prev_n]
+        hidden_state_value, cell_state_value = calc(lstm_state, previous_depth, previous_pose, reference_poses[n])
 
         ng_inputs["frame_number"] = frame_number_value
         ng_inputs["n_measurement_frames"] = n_measurement_frames_value
