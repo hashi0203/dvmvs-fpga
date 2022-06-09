@@ -33,14 +33,12 @@ class interpolate():
 
 
 class lstm_state_calculator():
-    def __init__(self, inputs, prepare_input_value, hshift, cshift):
-        self.org_lstm_state = prepare_input_value(inputs["hidden_state"][0].transpose(0, 2, 3, 1), hshift), prepare_input_value(inputs["cell_state"][0].transpose(0, 2, 3, 1), cshift)
+    def __init__(self, inputs, prepare_input_value, hshift):
         self.full_K_torch = torch.tensor(inputs["full_K"])
         self.half_K_torch = torch.tensor(inputs["half_K"])
         self.camera_matrix = torch.tensor(inputs["lstm_K"])
         self.prepare_input_value = prepare_input_value
         self.hshift = hshift
-        self.cshift = cshift
         self.test_image_width = 96
         self.test_image_height = 64
 
@@ -145,18 +143,12 @@ class lstm_state_calculator():
         return torch.nn.functional.grid_sample(image_src, points_2d_src_norm, align_corners=True, mode=sampling_mode)
 
 
-    def __call__(self, lstm_state, previous_depth, previous_pose, current_pose):
+    def __call__(self, hidden_state, previous_depth, previous_pose, current_pose):
         hshift = self.hshift
-        cshift = self.cshift
         prepare_input_value = self.prepare_input_value
 
-        if lstm_state is None:
-            return self.org_lstm_state
         if previous_pose is None:
-            if lstm_state[0].dtype == np.int64:
-                return lstm_state
-            else:
-                return prepare_input_value(lstm_state[0].transpose(0, 2, 3, 1), hshift), prepare_input_value(lstm_state[1].transpose(0, 2, 3, 1), cshift)
+            return hidden_state
 
         full_K_torch = self.full_K_torch
         half_K_torch = self.half_K_torch
@@ -178,19 +170,13 @@ class lstm_state_calculator():
                                                                                       original_width=test_image_width)
             depth_estimation = torch.nn.functional.interpolate(input=depth_estimation,
                                                                scale_factor=(1.0 / 16.0),
+                                                               recompute_scale_factor=True,
                                                                mode="nearest")
         else:
             depth_estimation = torch.zeros(size=(1, 1, int(test_image_height / 32.0), int(test_image_width / 32.0)))
 
 
-        if lstm_state[0].dtype == np.int64:
-            h_cur = lstm_state[0].transpose(0, 3, 1, 2).astype(np.float32) / (1 << hshift)
-            c_cur = lstm_state[1]
-        else:
-            h_cur = lstm_state[0].astype(np.float32)
-            c_cur = prepare_input_value(lstm_state[1].transpose(0, 2, 3, 1), cshift)
-
-
+        h_cur = hidden_state.transpose(0, 3, 1, 2).astype(np.float32) / (1 << hshift)
         h_cur = torch.tensor(h_cur)
         transformation = torch.bmm(torch.inverse(previous_pose), current_pose)
 
@@ -204,7 +190,7 @@ class lstm_state_calculator():
         b, c, h, w = h_cur.size()
         non_valid = torch.cat([non_valid] * c, dim=1)
         h_cur.data[non_valid] = 0.0
-        return prepare_input_value(h_cur.detach().numpy().copy().transpose(0, 2, 3, 1), hshift), c_cur
+        return prepare_input_value(h_cur.detach().numpy().copy().transpose(0, 2, 3, 1), hshift)
 
 
 class Fusion():
