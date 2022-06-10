@@ -28,21 +28,31 @@ class Fusion():
         return warp_grid
 
 
-    def calc_warpings(self, frame_number, batchsize, height, width, n_measurement_frames):
+    def prep(self, frame_number, n_measurement_frames, image2s):
+        self.n_measurement_frames = n_measurement_frames
+
         n_depth_levels = self.n_depth_levels
         K = self.K
-        pose1 = self.pose1s[frame_number]
-        pose2s = self.pose2ss[frame_number]
+        pose1 = self.pose1s[frame_number[0]]
+        pose2s = self.pose2ss[frame_number[0]]
         warp_grid = self.warp_grid
+
+        batchsize, height, width, channels = image2s[0].shape
 
         min_depth = 0.25
         max_depth = 20.0
 
-        warp_grid = torch.cat(batchsize * [warp_grid.unsqueeze(dim=0)])
+        inverse_depth_base = 1.0 / max_depth
+        inverse_depth_step = (1.0 / min_depth - 1.0 / max_depth) / (n_depth_levels - 1)
 
-        warpings = [[] for _ in range(n_measurement_frames)]
-        for m in range(n_measurement_frames):
+        width_normalizer = width / 2.0
+        height_normalizer = height / 2.0
+
+        warp_grid = torch.cat(batchsize * [warp_grid.unsqueeze(dim=0)])
+        self.warped_image2s = [[] for _ in range(n_measurement_frames[0])]
+        for m in range(n_measurement_frames[0]):
             pose2 = pose2s[m]
+            image2 = image2s[m]
 
             extrinsic2 = torch.inverse(pose2).bmm(pose1)
             R = extrinsic2[:, 0:3, 0:3]
@@ -51,12 +61,6 @@ class Fusion():
             Kt = K.bmm(t)
             K_R_Kinv = K.bmm(R).bmm(torch.inverse(K))
             K_R_Kinv_UV = K_R_Kinv.bmm(warp_grid)
-
-            inverse_depth_base = 1.0 / max_depth
-            inverse_depth_step = (1.0 / min_depth - 1.0 / max_depth) / (n_depth_levels - 1)
-
-            width_normalizer = width / 2.0
-            height_normalizer = height / 2.0
 
             for depth_i in range(n_depth_levels):
                 this_depth = 1 / (inverse_depth_base + depth_i * inverse_depth_step)
@@ -67,26 +71,9 @@ class Fusion():
                 warping = warping.view(batchsize, height, width, 2)
                 warping[:, :, :, 0] = (warping[:, :, :, 0] - width_normalizer) / width_normalizer
                 warping[:, :, :, 1] = (warping[:, :, :, 1] - height_normalizer) / height_normalizer
-                warpings[m].append(warping.cpu().detach().numpy().copy())
 
-        return np.array(warpings)
-
-
-    def prep(self, frame_number, n_measurement_frames, image2s):
-        self.n_measurement_frames = n_measurement_frames
-        n_depth_levels = self.n_depth_levels
-
-        batchsize, height, width, channels = image2s[0].shape
-        warpings = self.calc_warpings(frame_number[0], batchsize, height, width, n_measurement_frames[0])
-
-        self.warped_image2s = [[] for _ in range(n_measurement_frames[0])]
-        for m in range(n_measurement_frames[0]):
-            warping = warpings[m]
-            image2 = image2s[m]
-            for depth_i in range(n_depth_levels):
-                # warped_image2 = grid_sample(image2, warping[depth_i][0])
                 warped_image2 = torch.nn.functional.grid_sample(input=torch.tensor(image2.astype(np.float32).transpose(0, 3, 1, 2)),
-                                                                grid=torch.tensor(warping[depth_i]),
+                                                                grid=warping,
                                                                 mode='bilinear',
                                                                 padding_mode='zeros',
                                                                 align_corners=True)
