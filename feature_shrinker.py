@@ -2,7 +2,7 @@ import numpy as np
 import nngen as ng
 from utils import rshift_round_and_clip, interpolate
 
-def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och, par_och_k5, par,
+def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_ochs, par,
                      weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
 
     externs = []
@@ -15,7 +15,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och,
     bias62.set_value(np.round(params["fpn.inner_blocks.4.bias"] / (float) (1 << 7)).astype(params["fpn.inner_blocks.4.bias"].dtype))
 
     rshift62 = ng.constant([9], dtype=ng.int8)
-    act62 = ng.conv2d(act61, weight62, strides=(1, 1, 1, 1), bias=bias62, rshift_out=rshift62, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act62 = ng.conv2d(act61, weight62, strides=(1, 1, 1, 1), bias=bias62, rshift_out=rshift62, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(1, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [63] interpolate
@@ -30,7 +30,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och,
     bias64.set_value(np.round(params["fpn.inner_blocks.3.bias"] / (float) (1 << 9)).astype(params["fpn.inner_blocks.3.bias"].dtype))
 
     rshift64 = ng.constant([8], dtype=ng.int8)
-    act64 = ng.conv2d(act43, weight64, strides=(1, 1, 1, 1), bias=bias64, rshift_out=rshift64, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act64 = ng.conv2d(act43, weight64, strides=(1, 1, 1, 1), bias=bias64, rshift_out=rshift64, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(1, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [65] add
@@ -47,7 +47,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och,
     bias66.set_value(np.round(params["fpn.layer_blocks.3.bias"] / (float) (1 << 9)).astype(params["fpn.layer_blocks.3.bias"].dtype))
 
     rshift66 = ng.constant([9], dtype=ng.int8)
-    act66 = ng.conv2d(act65, weight66, strides=(1, 1, 1, 1), bias=bias66, rshift_out=rshift66, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act66 = ng.conv2d(act65, weight66, strides=(1, 1, 1, 1), bias=bias66, rshift_out=rshift66, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(3, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [67] interpolate
@@ -62,7 +62,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och,
     bias68.set_value(np.round(params["fpn.inner_blocks.2.bias"] / (float) (1 << 10)).astype(params["fpn.inner_blocks.2.bias"].dtype))
 
     rshift68 = ng.constant([8], dtype=ng.int8)
-    act68 = ng.conv2d(act25, weight68, strides=(1, 1, 1, 1), bias=bias68, rshift_out=rshift68, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act68 = ng.conv2d(act25, weight68, strides=(1, 1, 1, 1), bias=bias68, rshift_out=rshift68, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(1, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [69] add
@@ -79,7 +79,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och,
     bias70.set_value(np.round(params["fpn.layer_blocks.2.bias"] / (float) (1 << 9)).astype(params["fpn.layer_blocks.2.bias"].dtype))
 
     rshift70 = ng.constant([8], dtype=ng.int8)
-    act70 = ng.conv2d(act69, weight70, strides=(1, 1, 1, 1), bias=bias70, rshift_out=rshift70, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act70 = ng.conv2d(act69, weight70, strides=(1, 1, 1, 1), bias=bias70, rshift_out=rshift70, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(3, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [71] interpolate
@@ -94,7 +94,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och,
     bias72.set_value(np.round(params["fpn.inner_blocks.1.bias"] / (float) (1 << 11)).astype(params["fpn.inner_blocks.1.bias"].dtype))
 
     rshift72 = ng.constant([8], dtype=ng.int8)
-    act72 = ng.conv2d(act14, weight72, strides=(1, 1, 1, 1), bias=bias72, rshift_out=rshift72, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act72 = ng.conv2d(act14, weight72, strides=(1, 1, 1, 1), bias=bias72, rshift_out=rshift72, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(1, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [73] add
@@ -111,7 +111,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och,
     bias74.set_value(np.round(params["fpn.layer_blocks.1.bias"] / (float) (1 << 9)).astype(params["fpn.layer_blocks.1.bias"].dtype))
 
     rshift74 = ng.constant([9], dtype=ng.int8)
-    act74 = ng.conv2d(act73, weight74, strides=(1, 1, 1, 1), bias=bias74, rshift_out=rshift74, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act74 = ng.conv2d(act73, weight74, strides=(1, 1, 1, 1), bias=bias74, rshift_out=rshift74, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(3, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [75] interpolate
@@ -126,7 +126,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och,
     bias76.set_value(np.round(params["fpn.inner_blocks.0.bias"] / (float) (1 << 11)).astype(params["fpn.inner_blocks.0.bias"].dtype))
 
     rshift76 = ng.constant([7], dtype=ng.int8)
-    act76 = ng.conv2d(act3, weight76, strides=(1, 1, 1, 1), bias=bias76, rshift_out=rshift76, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act76 = ng.conv2d(act3, weight76, strides=(1, 1, 1, 1), bias=bias76, rshift_out=rshift76, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(1, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [77] add
@@ -143,7 +143,7 @@ def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_och,
     bias78.set_value(np.round(params["fpn.layer_blocks.0.bias"] / (float) (1 << 11)).astype(params["fpn.layer_blocks.0.bias"].dtype))
 
     rshift78 = ng.constant([9], dtype=ng.int8)
-    act78 = ng.conv2d(act77, weight78, strides=(1, 1, 1, 1), bias=bias78, rshift_out=rshift78, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act78 = ng.conv2d(act77, weight78, strides=(1, 1, 1, 1), bias=bias78, rshift_out=rshift78, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(3, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     return (act78, act74, act70, act66), externs

@@ -41,13 +41,15 @@ class ln():
         return round_and_clip((x - e) / np.sqrt(v + eps) * (1 << self.lshift), x.dtype)
 
 
-def LSTMFusion(act99, act100, act101, params, par_ich, par_och, par_och_k5, par,
+def LSTMFusion(act99, act100, act101, params, par_ich, par_ochs, par,
                weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
 
     externs = []
 
     # [102] cat
-    act102 = ng.concat([act99, act100], axis=3)
+    tmp102 = ng.extern([act100, act99], opcode=0x102, func=lambda x, y : x)
+    externs.append((tmp102, [act100], "tmp102 = act100"))
+    act102 = ng.concat([act99, tmp102], axis=3)
 
 
     # [103] conv
@@ -55,7 +57,7 @@ def LSTMFusion(act99, act100, act101, params, par_ich, par_och, par_och_k5, par,
     weight103.set_value(params["lstm_cell.conv.weight"])
 
     rshift103 = ng.constant([11], dtype=ng.int8)
-    act103 = ng.conv2d(act102, weight103, strides=(1, 1, 1, 1), rshift_out=rshift103, asymmetric_clip=True, par_ich=par_ich, par_och=par_och, dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
+    act103 = ng.conv2d(act102, weight103, strides=(1, 1, 1, 1), rshift_out=rshift103, asymmetric_clip=True, par_ich=par_ich, par_och=par_ochs[(3, 1)], dtype=act_dtype, mul_dtype=mid_dtype, sum_dtype=mid_dtype)
 
 
     # [104] sig_ln_celu
