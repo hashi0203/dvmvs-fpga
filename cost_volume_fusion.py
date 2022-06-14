@@ -8,13 +8,15 @@ class Fusion():
 
     def __init__(self, rshift, K, pose1s, pose2ss):
         self.rshift = rshift
-        self.K = torch.tensor(K)
-        self.pose1s = torch.tensor(pose1s)
-        self.pose2ss = torch.tensor(pose2ss)
+        self.K = K[0]
+        self.pose1s = pose1s[:, 0]
+        self.pose2ss = pose2ss[:, :, 0]
 
         test_image_width = 96
         test_image_height = 64
         self.warp_grid = self.get_warp_grid_for_cost_volume_calculation(int(test_image_width / 2), int(test_image_height / 2))
+
+        self.cython = {}
 
 
     def get_warp_grid_for_cost_volume_calculation(self, width, height):
@@ -23,8 +25,7 @@ class Fusion():
         ones = np.ones(shape=(height, width))
         x_grid, y_grid = np.meshgrid(x, y)
         warp_grid = np.stack((x_grid, y_grid, ones), axis=-1)
-        warp_grid = torch.from_numpy(warp_grid).float()
-        warp_grid = warp_grid.view(-1, 3).t()
+        warp_grid = warp_grid.astype(np.float32).reshape(-1, 3).T
         return warp_grid
 
 
@@ -48,51 +49,55 @@ class Fusion():
         width_normalizer = width / 2.0
         height_normalizer = height / 2.0
 
-        warp_grid = torch.cat(batchsize * [warp_grid.unsqueeze(dim=0)])
-        self.warped_image2s = [[] for _ in range(n_measurement_frames[0])]
+        self.warped_image2s = np.zeros((n_depth_levels, batchsize, height, width, channels))
         for m in range(n_measurement_frames[0]):
             pose2 = pose2s[m]
             image2 = image2s[m]
 
-            extrinsic2 = torch.inverse(pose2).bmm(pose1)
-            R = extrinsic2[:, 0:3, 0:3]
-            t = extrinsic2[:, 0:3, 3].unsqueeze(-1)
+            extrinsic2 = np.linalg.inv(pose2).dot(pose1)
+            R = extrinsic2[0:3, 0:3]
+            t = extrinsic2[0:3, 3]
 
-            Kt = K.bmm(t)
-            K_R_Kinv = K.bmm(R).bmm(torch.inverse(K))
-            K_R_Kinv_UV = K_R_Kinv.bmm(warp_grid)
+            Kt = K.dot(t)[:, None]
+            K_R_Kinv = K.dot(R).dot(np.linalg.inv(K))
+            K_R_Kinv_UV = K_R_Kinv.dot(warp_grid)
 
             for depth_i in range(n_depth_levels):
                 this_depth = 1 / (inverse_depth_base + depth_i * inverse_depth_step)
 
                 warping = K_R_Kinv_UV + (Kt / this_depth)
-                warping = warping.transpose(dim0=1, dim1=2)
-                warping = warping[:, :, 0:2] / (warping[:, :, 2].unsqueeze(-1) + 1e-8)
-                warping = warping.view(batchsize, height, width, 2)
+                warping = warping[:2] / (warping[2] + 1e-8)
+                warping = warping.T.reshape(1, height, width, 2)
                 warping[:, :, :, 0] = (warping[:, :, :, 0] - width_normalizer) / width_normalizer
                 warping[:, :, :, 1] = (warping[:, :, :, 1] - height_normalizer) / height_normalizer
 
                 warped_image2 = torch.nn.functional.grid_sample(input=torch.tensor(image2.astype(np.float32).transpose(0, 3, 1, 2)),
-                                                                grid=warping,
+                                                                grid=torch.tensor(warping),
                                                                 mode='bilinear',
                                                                 padding_mode='zeros',
                                                                 align_corners=True)
-                self.warped_image2s[m].append(warped_image2.detach().numpy().copy().transpose(0, 2, 3, 1) / channels)
+                self.warped_image2s[depth_i] += warped_image2.detach().numpy().copy().transpose(0, 2, 3, 1)
+
+        # self.cython["n_measurement_frames"] = n_measurement_frames[0]
+        # self.cython["image2s"] = image2s.astype(np.int16)
+        # self.cython["K"] = K
+        # self.cython["pose1"] = pose1
+        # self.cython["pose2s"] = pose2s
+        # self.cython["warp_grid"] = warp_grid
+        # self.cython["warped_image2s"] = self.warped_image2s
 
 
     def __call__(self, image1):
-        n_depth_levels = self.n_depth_levels
         n_measurement_frames = self.n_measurement_frames
         rshift = self.rshift
+        fused_cost_volume = np.array([np.sum(image1 * warped_image2, axis=3) for warped_image2 in self.warped_image2s]).transpose(1, 2, 3, 0)
 
-        batchsize, height, width, _ = image1.shape
-        fused_cost_volume = np.zeros((batchsize, height, width, n_depth_levels))
-        for m in range(n_measurement_frames[0]):
-            for depth_i in range(n_depth_levels):
-                warped_image2 = self.warped_image2s[m][depth_i]
-                fused_cost_volume[:,:,:,depth_i] += np.sum(image1 * warped_image2, axis=3)
+        # self.cython["image1"] = image1.astype(np.int16)
+        # self.cython["rshift"] = rshift
+        # self.cython["cost_volume"] = round_and_clip((fused_cost_volume / n_measurement_frames) / (1 << rshift), image1.dtype)
+        # np.savez_compressed('pynq/cython/params.npz', **self.cython)
 
-        return round_and_clip((fused_cost_volume / n_measurement_frames) / (1 << rshift), image1.dtype)
+        return round_and_clip(fused_cost_volume / (image1.shape[-1] * n_measurement_frames) / (1 << rshift), image1.dtype)
 
 
 def cost_volume_fusion(act78, K, pose1s, pose2ss, act_dtype):
