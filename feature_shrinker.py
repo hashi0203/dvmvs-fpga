@@ -1,6 +1,6 @@
 import numpy as np
 import nngen as ng
-from utils import rshift_round_and_clip, interpolate
+from utils import rshift_round_and_clip
 
 def feature_shrinker(act3, act14, act25, act43, act61, params, par_ich, par_ochs, par,
                      weight_dtype, bias_dtype, scale_dtype, act_dtype, mid_dtype):
