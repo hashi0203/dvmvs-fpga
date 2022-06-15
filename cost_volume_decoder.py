@@ -8,8 +8,7 @@ def cost_volume_decoder(act0, act81, act86, act91, act96, act106, params, par_ic
     externs = []
 
     # [107] interpolate
-    act107 = ng.extern([act106], shape=(1, 4, 6, 512), opcode=0x107, func=interpolate(4, 6, 0, "bilinear"))
-    externs.append((act107, [act106], "act107 = interpolate(4, 6, 0, 'bilinear')(act106)"))
+    act107 = ng.upsampling2d(act106, factors=(1, 2, 2, 1))
 
 
     # [108] conv
@@ -71,8 +70,7 @@ def cost_volume_decoder(act0, act81, act86, act91, act96, act106, params, par_ic
 
 
     # [113] interpolate
-    act113 = ng.extern([act111], shape=(1, 8, 12, 256), opcode=0x113, func=interpolate(8, 12, 0, "bilinear"))
-    externs.append((act113, [act111], "act113 = interpolate(8, 12, 0, 'bilinear')(act111)"))
+    act113 = ng.upsampling2d(act111, factors=(1, 2, 2, 1))
 
 
     # [114] conv
@@ -90,8 +88,7 @@ def cost_volume_decoder(act0, act81, act86, act91, act96, act106, params, par_ic
 
 
     # [115] interpolate
-    act115 = ng.extern([act112], shape=(1, 8, 12, 1), opcode=0x115, func=interpolate(8, 12, 0, "bilinear"))
-    externs.append((act115, [act112], "act115 = interpolate(8, 12, 0, 'bilinear')(act112)"))
+    act115 = ng.upsampling2d(act112, factors=(1, 2, 2, 1))
 
 
     # [116] cat
@@ -139,8 +136,7 @@ def cost_volume_decoder(act0, act81, act86, act91, act96, act106, params, par_ic
 
 
     # [120] interpolate
-    act120 = ng.extern([act118], shape=(1, 16, 24, 128), opcode=0x120, func=interpolate(16, 24, 0, "bilinear"))
-    externs.append((act120, [act118], "act120 = interpolate(16, 24, 0, 'bilinear')(act118)"))
+    act120 = ng.upsampling2d(act118, factors=(1, 2, 2, 1))
 
 
     # [121] conv
@@ -158,8 +154,7 @@ def cost_volume_decoder(act0, act81, act86, act91, act96, act106, params, par_ic
 
 
     # [122] interpolate
-    act122 = ng.extern([act119], shape=(1, 16, 24, 1), opcode=0x122, func=interpolate(16, 24, 0, "bilinear"))
-    externs.append((act122, [act119], "act122 = interpolate(16, 24, 0, 'bilinear')(act119)"))
+    act122 = ng.upsampling2d(act119, factors=(1, 2, 2, 1))
 
 
     # [123] cat
@@ -207,8 +202,7 @@ def cost_volume_decoder(act0, act81, act86, act91, act96, act106, params, par_ic
 
 
     # [127] interpolate
-    act127 = ng.extern([act125], shape=(1, 32, 48, 64), opcode=0x127, func=interpolate(32, 48, 0, "bilinear"))
-    externs.append((act127, [act125], "act127 = interpolate(32, 48, 0, 'bilinear')(act125)"))
+    act127 = ng.upsampling2d(act125, factors=(1, 2, 2, 1))
 
 
     # [128] conv
@@ -226,8 +220,7 @@ def cost_volume_decoder(act0, act81, act86, act91, act96, act106, params, par_ic
 
 
     # [129] interpolate
-    act129 = ng.extern([act126], shape=(1, 32, 48, 1), opcode=0x129, func=interpolate(32, 48, 0, "bilinear"))
-    externs.append((act129, [act126], "act129 = interpolate(32, 48, 0, 'bilinear')(act126)"))
+    act129 = ng.upsampling2d(act126, factors=(1, 2, 2, 1))
 
 
     # [130] cat
@@ -275,13 +268,11 @@ def cost_volume_decoder(act0, act81, act86, act91, act96, act106, params, par_ic
 
 
     # [134] interpolate
-    act134 = ng.extern([act133], shape=(1, 64, 96, 1), opcode=0x134, func=interpolate(64, 96, 0, "bilinear"))
-    externs.append((act134, [act133], "act134 = interpolate(64, 96, 0, 'bilinear')(act133)"))
+    act134 = ng.upsampling2d(act133, factors=(1, 2, 2, 1))
 
 
     # [135] interpolate
-    act135 = ng.extern([act132], shape=(1, 64, 96, 32), opcode=0x135, func=interpolate(64, 96, 0, "bilinear"))
-    externs.append((act135, [act132], "act135 = interpolate(64, 96, 0, 'bilinear')(act132)"))
+    act135 = ng.upsampling2d(act132, factors=(1, 2, 2, 1))
 
 
     # [136] cat
@@ -329,3 +320,4 @@ def cost_volume_decoder(act0, act81, act86, act91, act96, act106, params, par_ic
 
 
     return (act139,), externs
+
