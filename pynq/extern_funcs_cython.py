@@ -2,8 +2,6 @@ import torch
 import numpy as np
 import kornia
 
-from fusion import fusion_quantize_cython, prep_cython
-
 
 def round_and_clip(input):
     info = np.iinfo(np.int16)
@@ -193,49 +191,6 @@ class lstm_state_calculator():
         non_valid = torch.cat([non_valid] * c, dim=1)
         h_cur.data[non_valid] = 0.0
         return prepare_input_value(h_cur.detach().numpy().copy().transpose(0, 2, 3, 1), hshift)
-
-
-class Fusion():
-    n_depth_levels = 64
-
-    def __init__(self, rshift, K, pose1s, pose2ss):
-        self.rshift = rshift
-        self.K = K[0]
-        self.inv_K = np.linalg.inv(self.K)
-        self.pose1s = pose1s[:, 0]
-        self.pose2ss = pose2ss[:, :, 0]
-
-        test_image_width = 96
-        test_image_height = 64
-        self.warp_grid = self.get_warp_grid_for_cost_volume_calculation(int(test_image_width / 2), int(test_image_height / 2))
-
-
-    def get_warp_grid_for_cost_volume_calculation(self, width, height):
-        x = np.linspace(0, width - 1, num=int(width))
-        y = np.linspace(0, height - 1, num=int(height))
-        ones = np.ones(shape=(height, width))
-        x_grid, y_grid = np.meshgrid(x, y)
-        warp_grid = np.stack((x_grid, y_grid, ones), axis=-1)
-        warp_grid = warp_grid.astype(np.float32).reshape(-1, 3).T
-        return warp_grid
-
-
-    def prep(self, frame_number, n_measurement_frames, image2s):
-        self.n_measurement_frames = n_measurement_frames
-
-        K = self.K
-        inv_K = self.inv_K
-        pose1 = self.pose1s[frame_number]
-        pose2s = self.pose2ss[frame_number]
-        inv_pose2s = np.linalg.inv(pose2s[:n_measurement_frames])
-
-        warp_grid = self.warp_grid
-
-        self.warped_image2s = np.array(prep_cython(n_measurement_frames, np.array(image2s), K, inv_K, pose1, inv_pose2s, warp_grid), dtype=np.int16)
-
-
-    def __call__(self, image1):
-        return np.array(fusion_quantize_cython(image1, self.warped_image2s))
 
 
 class ln():
