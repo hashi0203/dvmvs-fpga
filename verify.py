@@ -122,23 +122,26 @@ class Verifier():
                 print_results(eval_outs, idx, verbose)
                 continue
 
-            frame_number_value = np.array([idx]).astype(np.int64)
+            # frame_number_value = np.array([idx]).astype(np.int64)
+            measurement_frames = keyframe_buffer.get_best_measurement_frames(reference_poses[n][0], max_n_measurement_frames)
             measurement_features_value = []
-            n_measurement_frames_value = np.array([n_measurement_frames[idx]]).astype(np.int64)
-            for measurement_frame in keyframe_buffer.get_best_measurement_frames(reference_poses[n][0], max_n_measurement_frames):
+            # n_measurement_frames_value = np.array([n_measurement_frames[idx]]).astype(np.int64)
+            for measurement_frame in measurement_frames:
                 measurement_features_value.append(measurement_frame[1])
             for _ in range(max_n_measurement_frames - len(measurement_features_value)):
                 measurement_features_value.append(np.zeros_like(measurement_features_value[0]))
             hidden_state_value, cell_state_value = calc(lstm_state, previous_depth, previous_pose, reference_poses[n])
 
-            ng_inputs["frame_number"] = frame_number_value
-            ng_inputs["n_measurement_frames"] = n_measurement_frames_value
-            for m in range(max_n_measurement_frames):
-                ng_inputs["measurement_feature%d" % m] = measurement_features_value[m]
+            fusion.prep(idx, len(measurement_frames), measurement_features_value)
+            # for i in range(64):
+            #     ng_inputs["warped_image2s_%d" % i] = fusion.warped_image2s[i]
+            # ng_inputs["frame_number"] = frame_number_value
+            # ng_inputs["n_measurement_frames"] = n_measurement_frames_value
+            # for m in range(max_n_measurement_frames):
+            #     ng_inputs["measurement_feature%d" % m] = measurement_features_value[m]
             ng_inputs["hidden_state"] = hidden_state_value
             ng_inputs["cell_state"] = cell_state_value
 
-            fusion.prep(frame_number_value, n_measurement_frames_value, measurement_features_value)
 
             input_layer_values = ng_inputs
             output_layers = layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full
@@ -167,7 +170,6 @@ class Verifier():
     def verify_one(self, layers, reference_features, cost_volume, skips, lstm_states, depth_full, verbose=False):
         inputs = self.inputs
         outputs = self.outputs
-        max_n_measurement_frames = self.max_n_measurement_frames
         fusion = self.fusion
         prepare_input_value = self.prepare_input_value
         calc_depth = self.calc_depth
@@ -192,8 +194,8 @@ class Verifier():
         reference_image_value = prepare_input_value(reference_images[n].transpose(0, 2, 3, 1), 12)
         ng_inputs["reference_image"] = reference_image_value
 
-        frame_number_value = np.array([idx]).astype(np.int64)
-        n_measurement_frames_value = np.array([n_measurement_frames[idx]]).astype(np.int64)
+        # frame_number_value = np.array([idx]).astype(np.int64)
+        # n_measurement_frames_value = np.array([n_measurement_frames[idx]]).astype(np.int64)
         measurement_features_value = prepare_input_value(measurement_features[idx].transpose(0, 1, 3, 4, 2), 9)
 
         lstm_state = inputs["hidden_state"][idx], inputs["cell_state"][idx]
@@ -201,14 +203,16 @@ class Verifier():
         previous_pose = reference_poses[prev_n]
         hidden_state_value, cell_state_value = calc(lstm_state, previous_depth, previous_pose, reference_poses[n])
 
-        ng_inputs["frame_number"] = frame_number_value
-        ng_inputs["n_measurement_frames"] = n_measurement_frames_value
-        for m in range(max_n_measurement_frames):
-            ng_inputs["measurement_feature%d" % m] = measurement_features_value[m]
+        fusion.prep(idx, n_measurement_frames[idx], measurement_features_value)
+        # for i in range(64):
+        #     ng_inputs["warped_image2s_%d" % i] = fusion.warped_image2s[i]
+        # ng_inputs["frame_number"] = frame_number_value
+        # ng_inputs["n_measurement_frames"] = n_measurement_frames_value
+        # for m in range(max_n_measurement_frames):
+        #     ng_inputs["measurement_feature%d" % m] = measurement_features_value[m]
         ng_inputs["hidden_state"] = hidden_state_value
         ng_inputs["cell_state"] = cell_state_value
 
-        fusion.prep(frame_number_value, n_measurement_frames_value, measurement_features_value)
 
         input_layer_values = ng_inputs
         output_layers = layers + reference_features[::-1] + cost_volume + skips + lstm_states[::-1] + depth_full

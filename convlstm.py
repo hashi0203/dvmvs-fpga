@@ -38,7 +38,7 @@ class ln():
         eps = 1e-5
         e = np.mean(x.reshape(-1, x.shape[-1]), axis=0)
         v = np.var(x.reshape(-1, x.shape[-1]), axis=0)
-        return round_and_clip((x - e) / np.sqrt(v + eps) * (1 << self.lshift), x.dtype)
+        return round_and_clip((x - e) / np.sqrt(v + eps) * (1 << self.lshift))
 
 
 def LSTMFusion(act99, act100, act101, params, par_ich, par_ochs, par,

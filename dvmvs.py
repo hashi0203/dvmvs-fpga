@@ -23,12 +23,15 @@ def prepare_placeholders(batchsize, act_dtype):
     print("preparing placeholders...")
 
     reference_image = ng.placeholder(dtype=act_dtype, shape=(batchsize, 64, 96, 3), name='reference_image')
+    # warped_image2s = [ng.placeholder(dtype=act_dtype, shape=(batchsize, 32, 48, 32), name='warped_image2s_%d' % i) for i in range(64)]
     hidden_state = ng.placeholder(dtype=act_dtype, shape=(batchsize, 2, 3, 512), name='hidden_state')
     cell_state = ng.placeholder(dtype=act_dtype, shape=(batchsize, 2, 3, 512), name='cell_state')
 
     return reference_image, hidden_state, cell_state
+    # return reference_image, warped_image2s, hidden_state, cell_state
 
 
+# def prepare_nets(reference_image, warped_image2s, hidden_state, cell_state, pars, dtypes):
 def prepare_nets(reference_image, hidden_state, cell_state, pars, dtypes):
 
     externs = []
@@ -41,6 +44,7 @@ def prepare_nets(reference_image, hidden_state, cell_state, pars, dtypes):
     externs.extend(extern)
 
     print("preparing cost volume fusion...")
+    # cost_volume, extern, fusion = cost_volume_fusion(reference_features[0], warped_image2s, pars["par"], inputs["half_K"],
     cost_volume, extern, fusion = cost_volume_fusion(reference_features[0], inputs["half_K"],
                                                      inputs["current_pose"], inputs["measurement_poses"], dtypes["act_dtype"])
     externs.extend(extern)
@@ -65,7 +69,8 @@ if __name__ == '__main__':
     project_name = "dvmvs"
 
     par_ich = 2
-    par_ochs = {(1, 1): 4, (3, 1): 4, (3, 2): 4, (5, 1): 2, (5, 2): 2} # (kernel_size, stride)
+    # (kernel_size, stride): 38, 34, 5, 15, 4 (total: 96)
+    par_ochs = {(1, 1): 4, (3, 1): 4, (3, 2): 4, (5, 1): 2, (5, 2): 2}
     par = 4
     pars = {"par_ich": par_ich, "par_ochs": par_ochs, "par": par}
 
@@ -145,6 +150,17 @@ if __name__ == '__main__':
         print('# weights was saved at %s' % param_filename)
         print("\t%f [s]" % (time.process_time() - start_time))
 
+
+    # input_names = ["reference_image", "warped_image2s", "hidden_state", "cell_state"]
+    # for name, layer in zip(input_names, input_layers):
+    #     if name == "warped_image2s":
+    #         for i, l in enumerate(layer):
+    #             if i < 10:
+    #                 print("%18s_%i: %6d," % (name, i, l.addr), l.aligned_shape)
+    #             else:
+    #                 print("%17s_%i: %6d," % (name, i, l.addr), l.aligned_shape)
+    #     else:
+    #         print("%20s: %6d," % (name, layer.addr), layer.aligned_shape)
 
     input_names = ["reference_image", "hidden_state", "cell_state"]
     for name, layer in zip(input_names, input_layers):

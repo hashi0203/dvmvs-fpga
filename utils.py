@@ -12,9 +12,9 @@ def rshift_round_and_clip(act, rshift, par, dtype):
     return ng.clip(ng.rshift_round(act, rshift, par=par), asymmetric_clip=True, par=par, dtype=dtype)
 
 
-def round_and_clip(input, dtype):
-    info = np.iinfo(dtype)
-    return np.clip(np.round(input).astype(np.int64), info.min, info.max).astype(dtype)
+def round_and_clip(input):
+    info = np.iinfo(np.int16)
+    return np.clip(np.round(input).astype(np.int64), info.min, info.max).astype(np.int64)
 
 
 class interpolate():
