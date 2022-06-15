@@ -40,9 +40,9 @@ cpdef float[:, :, :, :, :] prep_cython(char n_measurement_frames, short[:, :, :,
     cdef float this_depth
     cdef float[3] Ktd
     cdef float w2
-    cdef float[32][48][2] warping
 
-    cdef short[32][48][2] warping_short
+    cdef short warp0
+    cdef short warp1
 
     cdef short m
     cdef short i
@@ -55,10 +55,16 @@ cpdef float[:, :, :, :, :] prep_cython(char n_measurement_frames, short[:, :, :,
 
     cdef short x_int
     cdef short y_int
-    cdef short[2] xs
-    cdef short[2] ys
-    cdef short[2] dxs
-    cdef short[2] dys
+
+    cdef short xs0
+    cdef short xs1
+    cdef short ys0
+    cdef short ys1
+    cdef short dxs0
+    cdef short dxs1
+    cdef short dys0
+    cdef short dys1
+
     cdef char xi
     cdef char yi
     cdef char rshift = ((n_measurement_frames-1) + 8 * 2)
@@ -119,40 +125,36 @@ cpdef float[:, :, :, :, :] prep_cython(char n_measurement_frames, short[:, :, :,
             for i in range(3):
                 Ktd[i] = Kt[i] * this_depth
 
-            k = 0
-            for i in range(height):
-                for j in range(width):
-                    k = i * width + j
-                    w2 = K_R_Kinv_UV[k][2] + Ktd[2] + 1e-8
-                    warping[i][j][0] = ((K_R_Kinv_UV[k][0] + Ktd[0]) / (w2 * width_normalizer)) - 1
-                    warping[i][j][1] = ((K_R_Kinv_UV[k][1] + Ktd[1]) / (w2 * height_normalizer)) - 1
-
             for i in prange(height, nogil=True, schedule='static', chunksize=1):
             # for i in range(height):
                 for j in range(width):
-                    warping_short[i][j][0] = <short>round((warping[i][j][0] + 1) * (width1 / 2.0 * (1 << 8)))
-                    warping_short[i][j][1] = <short>round((warping[i][j][1] + 1) * (height1 / 2.0 * (1 << 8)))
 
-            # for j in prange(height, nogil=True, schedule='static', chunksize=1):
-            for j in range(height):
-                for k in range(width):
-                    x_int = (warping_short[j][k][0] >> 8)
-                    y_int = (warping_short[j][k][1] >> 8)
-                    xs[0] = x_int
-                    xs[1] = x_int + 1
-                    ys[0] = y_int
-                    ys[1] = y_int + 1
-                    dxs[0] = warping_short[j][k][0] & ((1 << 8) - 1)
-                    dys[0] = warping_short[j][k][1] & ((1 << 8) - 1)
-                    dxs[1] = (1 << 8) - dxs[0]
-                    dys[1] = (1 << 8) - dys[0]
-                    for i in range(channels):
+                    k = i * width + j
+                    w2 = K_R_Kinv_UV[k][2] + Ktd[2] + 1e-8
+                    warp0 = <short>round(((K_R_Kinv_UV[k][0] + Ktd[0]) / (w2 * width_normalizer)) * (width1 / 2.0 * (1 << 8)))
+                    warp1 = <short>round(((K_R_Kinv_UV[k][1] + Ktd[1]) / (w2 * height_normalizer)) * (height1 / 2.0 * (1 << 8)))
+
+                    x_int = warp0 >> 8
+                    y_int = warp1 >> 8
+                    xs0 = x_int
+                    xs1 = x_int + 1
+                    ys0 = y_int
+                    ys1 = y_int + 1
+                    dxs0 = warp0 & ((1 << 8) - 1)
+                    dys0 = warp1 & ((1 << 8) - 1)
+                    dxs1 = (1 << 8) - dxs0
+                    dys1 = (1 << 8) - dys0
+                    for k in range(channels):
                         s = 1 << (rshift-1)
-                        for yi in range(2):
-                            for xi in range(2):
-                                if not(ys[yi] < 0 or height1 < ys[yi] or xs[xi] < 0 or width1 < xs[xi]):
-                                    s += dys[1-yi] * dxs[1-xi] * image2s[m][0][ys[yi]][xs[xi]][i]
-                        warped_image2s[depth_i][0][j][k][i] += <short>(s >> rshift)
+                        if not(ys0 < 0 or height1 < ys0 or xs0 < 0 or width1 < xs0):
+                            s += dys1 * dxs1 * image2s[m][0][ys0][xs0][k]
+                        if not(ys0 < 0 or height1 < ys0 or xs1 < 0 or width1 < xs1):
+                            s += dys1 * dxs0 * image2s[m][0][ys0][xs1][k]
+                        if not(ys1 < 0 or height1 < ys1 or xs0 < 0 or width1 < xs0):
+                            s += dys0 * dxs1 * image2s[m][0][ys1][xs0][k]
+                        if not(ys1 < 0 or height1 < ys1 or xs1 < 0 or width1 < xs1):
+                            s += dys0 * dxs0 * image2s[m][0][ys1][xs1][k]
+                        warped_image2s[depth_i][0][i][j][k] += <short>(s >> rshift)
 
     return warped_image2s
 
@@ -177,6 +179,7 @@ cpdef short[:, :, :, :] fusion_quantize_cython(short[:, :, :, :] image1, short[:
     cdef char c
 
     for depth_i in prange(n_depth_levels, nogil=True, schedule='static', chunksize=1):
+    # for depth_i in range(n_depth_levels):
         for b in range(batchsize):
             for h in range(height):
                 for w in range(width):
