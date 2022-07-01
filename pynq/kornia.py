@@ -4,12 +4,6 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 
-def check_is_tensor(obj):
-    """Checks whether the supplied object is a tensor.
-    """
-    if not isinstance(obj, torch.Tensor):
-        raise TypeError("Input type is not a torch.Tensor. Got {}".format(type(obj)))
-
 
 def create_meshgrid(
         height: int,
@@ -72,32 +66,6 @@ def unproject_points(
         torch.Tensor: tensor of (x, y, z) world coordinates with shape
         :math:`(*, 3)`.
     """
-    if not torch.is_tensor(point_2d):
-        raise TypeError("Input point_2d type is not a torch.Tensor. Got {}"
-                        .format(type(point_2d)))
-
-    if not torch.is_tensor(depth):
-        raise TypeError("Input depth type is not a torch.Tensor. Got {}"
-                        .format(type(depth)))
-
-    if not torch.is_tensor(camera_matrix):
-        raise TypeError("Input camera_matrix type is not a torch.Tensor. Got {}"
-                        .format(type(camera_matrix)))
-
-    if not (point_2d.device == depth.device == camera_matrix.device):
-        raise ValueError("Input tensors must be all in the same device.")
-
-    if not point_2d.shape[-1] == 2:
-        raise ValueError("Input points_2d must be in the shape of (*, 2)."
-                         " Got {}".format(point_2d.shape))
-
-    if not depth.shape[-1] == 1:
-        raise ValueError("Input depth must be in the shape of (*, 1)."
-                         " Got {}".format(depth.shape))
-
-    if not camera_matrix.shape[-2:] == (3, 3):
-        raise ValueError(
-            "Input camera_matrix must be in the shape of (*, 3, 3).")
     # projection eq. K_inv * [u v 1]'
     # x = (u - cx) * Z / fx
     # y = (v - cy) * Z / fy
@@ -143,20 +111,6 @@ def depth_to_3d(depth: torch.Tensor, camera_matrix: torch.Tensor, normalize_poin
         torch.Tensor: tensor with a 3d point per pixel of the same resolution as the input.
 
     """
-    if not isinstance(depth, torch.Tensor):
-        raise TypeError(f"Input depht type is not a torch.Tensor. Got {type(depth)}.")
-
-    if not len(depth.shape) == 4 and depth.shape[-3] == 1:
-        raise ValueError(f"Input depth musth have a shape (B, 1, H, W). Got: {depth.shape}")
-
-    if not isinstance(camera_matrix, torch.Tensor):
-        raise TypeError(f"Input camera_matrix type is not a torch.Tensor. "
-                        f"Got {type(camera_matrix)}.")
-
-    if not len(camera_matrix.shape) == 3 and camera_matrix.shape[-2:] == (3, 3):
-        raise ValueError(f"Input camera_matrix must have a shape (B, 3, 3). "
-                         f"Got: {camera_matrix.shape}.")
-
     # create base coordinates grid
     batch_size, _, height, width = depth.shape
     points_2d: torch.Tensor = create_meshgrid(
@@ -183,13 +137,6 @@ def convert_points_from_homogeneous(
         >>> input = torch.rand(2, 4, 3)  # BxNx3
         >>> output = kornia.convert_points_from_homogeneous(input)  # BxNx2
     """
-    if not isinstance(points, torch.Tensor):
-        raise TypeError("Input type is not a torch.Tensor. Got {}".format(
-            type(points)))
-
-    if len(points.shape) < 2:
-        raise ValueError("Input must be at least a 2D tensor. Got {}".format(
-            points.shape))
 
     # we check for points at infinity
     z_vec: torch.Tensor = points[..., -1:]
@@ -212,13 +159,6 @@ def convert_points_to_homogeneous(points: torch.Tensor) -> torch.Tensor:
         >>> input = torch.rand(2, 4, 3)  # BxNx3
         >>> output = kornia.convert_points_to_homogeneous(input)  # BxNx4
     """
-    if not isinstance(points, torch.Tensor):
-        raise TypeError("Input type is not a torch.Tensor. Got {}".format(
-            type(points)))
-    if len(points.shape) < 2:
-        raise ValueError("Input must be at least a 2D tensor. Got {}".format(
-            points.shape))
-
     return torch.nn.functional.pad(points, [0, 1], "constant", 1.0)
 
 
@@ -242,14 +182,6 @@ def transform_points(trans_01: torch.Tensor,
         >>> trans_01 = torch.eye(4).view(1, 4, 4)  # Bx4x4
         >>> points_0 = kornia.transform_points(trans_01, points_1)  # BxNx3
     """
-    check_is_tensor(trans_01)
-    check_is_tensor(points_1)
-    if not trans_01.device == points_1.device:
-        raise TypeError("Tensor must be in the same device")
-    if not trans_01.shape[0] == points_1.shape[0] and trans_01.shape[0] != 1:
-        raise ValueError("Input batch size must be the same for both tensors or 1")
-    if not trans_01.shape[-1] == (points_1.shape[-1] + 1):
-        raise ValueError("Last input dimensions must differe by one unit")
     # to homogeneous
     points_1_h = convert_points_to_homogeneous(points_1)  # BxNxD+1
     # transform coordinates
@@ -275,25 +207,6 @@ def project_points(
     Returns:
         torch.Tensor: array of (u, v) cam coordinates with shape :math:`(*, 2)`.
     """
-    if not torch.is_tensor(point_3d):
-        raise TypeError("Input point_3d type is not a torch.Tensor. Got {}"
-                        .format(type(point_3d)))
-
-    if not torch.is_tensor(camera_matrix):
-        raise TypeError("Input camera_matrix type is not a torch.Tensor. Got {}"
-                        .format(type(camera_matrix)))
-
-    if not (point_3d.device == camera_matrix.device):
-        raise ValueError("Input tensors must be all in the same device.")
-
-    if not point_3d.shape[-1] == 3:
-        raise ValueError("Input points_3d must be in the shape of (*, 3)."
-                         " Got {}".format(point_3d.shape))
-
-    if not camera_matrix.shape[-2:] == (3, 3):
-        raise ValueError(
-            "Input camera_matrix must be in the shape of (*, 3, 3).")
-
     # projection eq. [u, v, w]' = K * [x y z 1]'
     # u = fx * X / Z + cx
     # v = fy * Y / Z + cy
@@ -335,9 +248,6 @@ def normalize_pixel_coordinates(
     Return:
         torch.Tensor: the normalized pixel coordinates.
     """
-    if pixel_coordinates.shape[-1] != 2:
-        raise ValueError("Input pixel_coordinates must be of shape (*, 2). "
-                         "Got {}".format(pixel_coordinates.shape))
     # compute normalization factor
     hw: torch.Tensor = torch.stack([
         torch.tensor(width), torch.tensor(height)

@@ -19,7 +19,10 @@ def LSTMFusion(act99, act100, act101, params, par_ich, par_ochs, par,
     externs = []
 
     # [102] cat
-    act102 = ng.concat([act99, act100], axis=3)
+    tmp102 = ng.extern([act100, act99], opcode=0x102, func=lambda x, y : x)
+    externs.append((tmp102, [act100], "tmp102 = act100"))
+    act102 = ng.concat([act99, tmp102], axis=3)
+    # act102 = ng.concat([act99, act100], axis=3)
 
 
     # [103] conv

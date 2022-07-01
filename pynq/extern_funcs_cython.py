@@ -15,11 +15,9 @@ class interpolate():
         self.mode = mode
 
     def __call__(self, input):
-        batchsize, in_height, in_width, channels = input.shape
         out_height, out_width = self.out_height, self.out_width
         rshift = self.rshift
         mode = self.mode
-        output = np.zeros((batchsize, out_height, out_width, channels), dtype=input.dtype)
 
         if rshift != 0:
             print("interpolate:", rshift)
@@ -27,9 +25,7 @@ class interpolate():
             out_shape = (out_height, out_width)
             mid = torch.tensor(input.astype(np.float32).transpose(0, 3, 1, 2))
             mid = torch.nn.functional.interpolate(mid, size=out_shape, mode=mode, align_corners=True)
-            output = mid.detach().numpy().copy().transpose(0, 2, 3, 1).astype(input.dtype)
-
-        return output
+            return mid.detach().numpy().copy().transpose(0, 2, 3, 1).astype(input.dtype)
 
 
 class lstm_state_calculator():
@@ -95,33 +91,6 @@ class lstm_state_calculator():
             normalize_points: bool = False,
             sampling_mode='bilinear') -> torch.Tensor:
         # TAKEN FROM KORNIA LIBRARY
-        if not isinstance(image_src, torch.Tensor):
-            raise TypeError(f"Input image_src type is not a torch.Tensor. Got {type(image_src)}.")
-
-        if not len(image_src.shape) == 4:
-            raise ValueError(f"Input image_src musth have a shape (B, D, H, W). Got: {image_src.shape}")
-
-        if not isinstance(depth_dst, torch.Tensor):
-            raise TypeError(f"Input depht_dst type is not a torch.Tensor. Got {type(depth_dst)}.")
-
-        if not len(depth_dst.shape) == 4 and depth_dst.shape[-3] == 1:
-            raise ValueError(f"Input depth_dst musth have a shape (B, 1, H, W). Got: {depth_dst.shape}")
-
-        if not isinstance(src_trans_dst, torch.Tensor):
-            raise TypeError(f"Input src_trans_dst type is not a torch.Tensor. "
-                            f"Got {type(src_trans_dst)}.")
-
-        if not len(src_trans_dst.shape) == 3 and src_trans_dst.shape[-2:] == (3, 3):
-            raise ValueError(f"Input src_trans_dst must have a shape (B, 3, 3). "
-                             f"Got: {src_trans_dst.shape}.")
-
-        if not isinstance(camera_matrix, torch.Tensor):
-            raise TypeError(f"Input camera_matrix type is not a torch.Tensor. "
-                            f"Got {type(camera_matrix)}.")
-
-        if not len(camera_matrix.shape) == 3 and camera_matrix.shape[-2:] == (3, 3):
-            raise ValueError(f"Input camera_matrix must have a shape (B, 3, 3). "
-                             f"Got: {camera_matrix.shape}.")
         # unproject source points to camera frame
         points_3d_dst: torch.Tensor = kornia.depth_to_3d(depth_dst, camera_matrix, normalize_points)  # Bx3xHxW
 
